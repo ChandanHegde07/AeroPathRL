@@ -1,367 +1,197 @@
-# Autonomous Drone Navigation using Reinforcement Learning
+# AeroPath RL: Autonomous Drone Navigation
 
-> A production-grade deep RL pipeline for training a drone agent to navigate from a start position to a target in a 3D simulated environment — avoiding obstacles and optimising path efficiency — using **Proximal Policy Optimization (PPO)** and **Microsoft AirSim**.
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![RL Algorithm](https://img.shields.io/badge/RL-PPO-orange.svg)](#training)
+[![Simulator](https://img.shields.io/badge/Simulator-AirSim-00bcd4.svg)](https://github.com/microsoft/AirSim)
+[![Code Style: Clean](https://img.shields.io/badge/Code%20Style-Clean-2ea44f.svg)](#)
 
----
+A deep reinforcement learning pipeline for training a drone to reach a 3D target while avoiding collisions, using **PPO + Gymnasium + AirSim**.
 
-## Table of Contents
+## Quick Facts
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Project Structure](#project-structure)
-- [Installation](#installation)
-- [AirSim Setup](#airsim-setup)
-- [Quick Start](#quick-start)
-- [Configuration](#configuration)
-- [Training](#training)
-- [Evaluation](#evaluation)
-- [Observation & Action Space](#observation--action-space)
-- [Reward Function](#reward-function)
-- [Neural Network Architecture](#neural-network-architecture)
-- [TensorBoard Monitoring](#tensorboard-monitoring)
-- [Notebook Analysis](#notebook-analysis)
-- [Extending the Project](#extending-the-project)
-- [Troubleshooting](#troubleshooting)
-
----
-
-## Overview
-
-This project implements an end-to-end reinforcement learning system where a simulated drone:
-
-1. **Perceives** its environment through position, velocity, orientation and 8 radial distance sensors
-2. **Acts** by outputting continuous 3-axis velocity commands `(vx, vy, vz)`
-3. **Learns** via PPO to reach a target location while avoiding collisions and staying within bounds
-
-The pipeline works **with or without AirSim** — a lightweight mock client enables full pipeline testing (training, evaluation, notebooks) on any machine.
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    DroneNavigationEnv                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │ AirSim/Mock  │→ │StateProcessor│→ │ obs: float32 │  │
-│  │   Client     │  │   (norm.)    │  │  vector[19]  │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │              RewardFunction                      │   │
-│  │  goal + progress + collision + boundary + step   │   │
-│  └──────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-              │  obs            ▲  action (vx,vy,vz)
-              ▼                 │
-┌─────────────────────────────────────────────────────────┐
-│                  PPO Agent (SB3)                        │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │  Encoder [256,256] → Actor [128] / Critic [128]  │   │
-│  └──────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-```
-
----
+| Item | Value |
+|---|---|
+| Primary Task | Drone target navigation in 3D |
+| Algorithm | Proximal Policy Optimization (PPO) |
+| Action Space | Continuous velocity `(vx, vy, vz)` |
+| Observation Space | 19-D normalized vector |
+| Simulator | Microsoft AirSim (with mock fallback) |
+| Entry Point | `main.py` |
 
 ## Project Structure
 
-```
-drone_rl_navigation/
-│
-├── config/
-│   ├── env_config.py          # Environment hyperparameters (target pos, rewards…)
-│   └── training_config.py     # PPO hyperparameters, paths, schedule
-│
-├── environment/
-│   ├── airsim_env.py          # Custom Gymnasium environment (+ mock client)
-│   ├── state_processing.py    # Raw AirSim data → normalised obs vector
-│   └── reward_function.py     # Modular, logged reward shaping
-│
-├── agent/
-│   ├── model.py               # Standalone PyTorch actor-critic + SB3 factory
-│   ├── train.py               # DroneTrainer: PPO loop, callbacks, checkpointing
-│   └── evaluate.py            # DroneEvaluator: single / batch / record modes
-│
-├── utils/
-│   ├── logger.py              # CSV + TensorBoard training logger
-│   └── visualization.py       # Reward curves, 3-D trajectories, sensor heat-maps
-│
-├── simulations/
-│   ├── airsim_settings.json   # AirSim vehicle + 8 distance-sensor configuration
-│   └── environments/          # Custom UE4 map files (optional)
-│
-├── models/
-│   └── saved_models/          # Best & final checkpoints written here
-│
-├── notebooks/
-│   └── analysis.ipynb         # Full training analysis (works with synthetic data)
-│
-├── main.py                    # Unified CLI entry point
-├── requirements.txt
-└── README.md
-```
+| Path | Purpose |
+|---|---|
+| `config/env_config.py` | Environment, reward, and boundary settings |
+| `config/training_config.py` | PPO hyperparameters and training paths |
+| `environment/airsim_env.py` | Gymnasium environment + AirSim/mock client |
+| `environment/state_processing.py` | Raw state to normalized observation vector |
+| `environment/reward_function.py` | Reward shaping and reward breakdown |
+| `agent/train.py` | Training orchestration, callbacks, checkpointing |
+| `agent/evaluate.py` | Single and batch evaluation modes |
+| `agent/model.py` | Actor-critic model and SB3 policy kwargs |
+| `utils/logger.py` | CSV + TensorBoard logging utilities |
+| `utils/visualization.py` | Training and trajectory plotting helpers |
+| `simulations/airsim_settings.json` | AirSim vehicle and sensor config |
+| `notebooks/analysis.ipynb` | Analysis notebook |
 
----
+## Architecture
+
+```text
+AirSim/Mock Client
+      -> DroneNavigationEnv
+      -> StateProcessor (obs[19])
+      -> PPO Agent (SB3)
+      -> Velocity Action (vx, vy, vz)
+      -> RewardFunction (goal/progress/collision/boundary/step/altitude)
+```
 
 ## Installation
 
 ### Prerequisites
 
 | Tool | Version |
-|------|---------|
-| Python | ≥ 3.10 |
-| CUDA (optional) | ≥ 11.8 |
-| Unreal Engine | 4.27 (for AirSim) |
+|---|---|
+| Python | 3.10+ |
+| CUDA (optional) | 11.8+ |
+| Unreal Engine (AirSim usage) | 4.27 |
 
-### 1. Clone & create environment
-
-```bash
-git clone https://github.com/your-org/drone_rl_navigation.git
-cd drone_rl_navigation
-
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-```
-
-### 2. Install dependencies
+### Setup
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate         # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-> **Without a GPU:** PyTorch will fall back to CPU automatically. Training will be slower but fully functional.
+## AirSim Setup (Optional)
 
----
+Use this only if you want full AirSim simulation.
 
-## AirSim Setup
+1. Download an AirSim binary from the [official releases](https://github.com/microsoft/AirSim/releases).
+2. Copy `simulations/airsim_settings.json` to your AirSim settings path.
+3. Start the AirSim environment.
+4. The project connects to `127.0.0.1:41451`.
 
-> **Skip this section if you just want to test the pipeline** — the mock environment works without AirSim.
+If AirSim is unavailable, the project automatically falls back to a mock client.
 
-1. Download a prebuilt AirSim binary from the [AirSim releases page](https://github.com/microsoft/AirSim/releases) (e.g. `Blocks` environment).
-2. Copy `simulations/airsim_settings.json` to:
-   - **Windows:** `C:\Users\<user>\Documents\AirSim\settings.json`
-   - **Linux/macOS:** `~/Documents/AirSim/settings.json`
-3. Launch the AirSim binary.
-4. The environment will auto-connect to `127.0.0.1:41451`.
+## Commands
 
----
-
-## Quick Start
-
-```bash
-# Print current config
-python main.py info
-
-# Train for 200k steps (uses mock env if AirSim is not running)
-python main.py train --timesteps 200000
-
-# Evaluate the best saved model (20 episodes)
-python main.py evaluate --model models/saved_models/best_model --n 20 --save
-
-# Run a single rendered demo episode
-python main.py demo --model models/saved_models/best_model
-
-# Resume interrupted training
-python main.py train --resume models/saved_models/drone_ppo_ckpt_100000_steps
-```
-
----
+| Goal | Command |
+|---|---|
+| Show current config | `python3 main.py info` |
+| Start training | `python3 main.py train` |
+| Train with custom timesteps | `python3 main.py train --timesteps 200000` |
+| Resume training | `python3 main.py train --resume models/saved_models/drone_ppo_ckpt_100000_steps` |
+| Evaluate (batch) | `python3 main.py evaluate --model models/saved_models/best_model --mode batch --n 20 --save --out_dir eval_results/` |
+| Evaluate (single) | `python3 main.py evaluate --model models/saved_models/best_model --mode single --render` |
+| Demo run | `python3 main.py demo --model models/saved_models/best_model` |
 
 ## Configuration
 
-All hyperparameters are centralised in two dataclasses:
+### Environment (`config/env_config.py`)
 
-### `config/env_config.py` — Environment
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `target_position` | `(30, 0, -10)` | Goal position in NED metres |
-| `max_velocity` | `5.0` m/s | Maximum velocity per axis |
-| `goal_tolerance` | `2.0` m | Acceptance radius around target |
+| Parameter | Default | Meaning |
+|---|---|---|
+| `target_position` | `(30.0, 0.0, -10.0)` | Goal position in NED meters |
+| `spawn_position` | `(0.0, 0.0, -5.0)` | Initial drone spawn point |
+| `goal_tolerance` | `2.0` | Goal acceptance radius |
+| `max_velocity` | `5.0` | Max velocity per axis (m/s) |
+| `num_distance_sensors` | `8` | Number of radial distance sensors |
 | `max_steps_per_episode` | `500` | Episode length cap |
-| `num_distance_sensors` | `8` | Radial proximity sensors |
-| `reward_goal_reached` | `+200` | Terminal success reward |
-| `reward_collision` | `−100` | Terminal collision penalty |
-| `reward_progress_scale` | `5.0` | Scales Δdistance reward |
+| `reward_goal_reached` | `200.0` | Success terminal reward |
+| `reward_collision` | `-100.0` | Collision terminal penalty |
+| `reward_progress_scale` | `5.0` | Progress reward multiplier |
 
-### `config/training_config.py` — PPO
+### Training (`config/training_config.py`)
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `total_timesteps` | `1 000 000` | Total environment steps |
-| `learning_rate` | `3e-4` | Adam learning rate |
-| `n_steps` | `2048` | Steps per PPO update |
-| `batch_size` | `64` | Mini-batch size |
-| `n_epochs` | `10` | Gradient update passes |
+| Parameter | Default | Meaning |
+|---|---|---|
+| `total_timesteps` | `1_000_000` | Total training steps |
+| `learning_rate` | `3e-4` | PPO optimizer LR |
+| `n_steps` | `2048` | Rollout length per update |
+| `batch_size` | `64` | Minibatch size |
+| `n_epochs` | `10` | PPO optimization epochs/update |
 | `gamma` | `0.99` | Discount factor |
-| `ent_coef` | `0.01` | Entropy regularisation |
-| `net_arch` | `[256, 256]` | Shared encoder layer sizes |
+| `ent_coef` | `0.01` | Entropy regularization |
+| `net_arch` | `[256, 256]` | MLP hidden layer sizes |
+| `n_envs` | `1` | Parallel environment count |
 
----
+## Observation and Action Space
 
-## Training
+### Observation (19-D)
 
-```bash
-python main.py train
-```
+| Slice | Content | Normalization |
+|---|---|---|
+| `[0:3]` | Relative target position `(dx, dy, dz)` | Divide by boundary diagonal |
+| `[3:6]` | Linear velocity `(vx, vy, vz)` | Divide by `max_velocity` |
+| `[6:9]` | Orientation `(roll, pitch, yaw)` | Divide by `pi` |
+| `[9:17]` | Distance sensor readings (8 values) | Divide by `sensor_max_range` |
+| `[17]` | Scalar distance-to-goal | Divide by boundary diagonal |
 
-Training produces:
-- `models/saved_models/best_model.zip` — best checkpoint by eval reward
-- `models/saved_models/final_drone_ppo.zip` — model at training end
-- `models/saved_models/checkpoints/` — periodic checkpoints
-- `logs/run_<timestamp>.csv` — per-episode metrics
-- `logs/tensorboard/` — TensorBoard event files
+### Action (3-D)
 
-### Curriculum Learning (optional)
-
-Enable in `training_config.py`:
-
-```python
-use_curriculum = True
-curriculum_stages = [
-    {"timesteps": 0,        "target_distance": 10.0, "num_obstacles": 2},
-    {"timesteps": 200_000,  "target_distance": 20.0, "num_obstacles": 5},
-    {"timesteps": 500_000,  "target_distance": 30.0, "num_obstacles": 10},
-]
-```
-
----
-
-## Evaluation
-
-```bash
-# Batch evaluation (20 episodes) + save trajectories
-python main.py evaluate \
-    --model models/saved_models/best_model \
-    --mode batch --n 20 --save --out_dir eval_results/
-
-# Single episode with step-by-step console output
-python main.py evaluate \
-    --model models/saved_models/best_model \
-    --mode single --render
-```
-
-Output files in `eval_results/`:
-- `eval_stats.json` — aggregate metrics (success rate, mean reward, …)
-- `trajectories.csv` — per-step (x, y, z, reward) for every episode
-
----
-
-## Observation & Action Space
-
-### Observation vector — 19 dimensions
-
-| Slice | Content | Normalisation |
-|-------|---------|---------------|
-| `[0:3]` | Relative position to target `(dx, dy, dz)` | ÷ bounding-box diagonal |
-| `[3:6]` | Linear velocity `(vx, vy, vz)` | ÷ max_velocity |
-| `[6:9]` | Orientation `(roll, pitch, yaw)` | ÷ π |
-| `[9:17]` | 8 distance-sensor readings | ÷ sensor_max_range |
-| `[17]` | Scalar distance to target | ÷ bounding-box diagonal |
-
-### Action space — 3 dimensions
-
-Continuous `Box(−1, 1, shape=(3,))` → scaled to `±max_velocity` m/s before sending to AirSim.
-
----
+`Box(-1, 1, shape=(3,))`, scaled to `+-max_velocity` before sending velocity commands.
 
 ## Reward Function
 
-```
-R(t) = R_goal  (terminal +200 on success)
-     + R_collision  (terminal −100 on crash)
-     + R_boundary   (−50 if out of navigable box)
-     + R_progress   (reward_progress_scale × Δdistance_to_goal)
-     + R_step       (−0.1 per step)
-     + R_altitude   (linear penalty outside [2, 25] m)
+```text
+R = goal + collision + boundary + progress + step + altitude
 ```
 
-All coefficients are configurable via `EnvConfig`.
+| Component | Behavior |
+|---|---|
+| `goal` | Large positive reward when target reached |
+| `collision` | Large negative reward on impact |
+| `boundary` | Penalty outside allowed bounds |
+| `progress` | Reward from reduction in distance-to-goal |
+| `step` | Small per-step penalty for efficiency |
+| `altitude` | Penalty outside nominal altitude range |
 
----
+## Training Outputs
 
-## Neural Network Architecture
+| Output | Location |
+|---|---|
+| Best model | `models/saved_models/best_model.zip` |
+| Final model | `models/saved_models/final_drone_ppo.zip` |
+| Checkpoints | `models/saved_models/checkpoints/` |
+| CSV logs | `logs/run_<timestamp>.csv` |
+| TensorBoard logs | `logs/tensorboard/` |
 
-```
-Input: obs[19]
-    │
-    ▼
-┌─────────────────────────┐
-│  Shared Encoder          │
-│  Linear(19→256) + LN + Tanh  │
-│  Linear(256→256) + LN + Tanh │
-└─────────┬───────────────┘
-          │
-    ┌─────┴──────┐
-    ▼            ▼
- Actor          Critic
- Linear(256→128) + Tanh    Linear(256→128) + Tanh
- Linear(128→3) → tanh      Linear(128→1)
- + learnable log_std
-```
-
-Weights initialised with **orthogonal initialisation** (gain=0.01 for actor output, 1.0 elsewhere).
-
----
-
-## TensorBoard Monitoring
+## TensorBoard
 
 ```bash
 tensorboard --logdir logs/tensorboard/
 ```
 
-Tracked scalars:
-- `train/` — PPO loss, value loss, entropy, clip fraction (SB3 defaults)
-- `drone/mean_episode_reward_50` — rolling 50-episode mean
-- `drone/goal_rate` — cumulative goal-success fraction
-- `drone/collision_rate` — cumulative collision fraction
-- `eval/mean_reward` — EvalCallback reward
-
----
-
-## Notebook Analysis
+## Notebook
 
 ```bash
 cd notebooks
 jupyter notebook analysis.ipynb
 ```
 
-The notebook runs entirely on **synthetic data** when no training logs are present, making it safe to explore before training.
-
-Sections:
-1. Load training CSV logs
-2. Reward learning curve
-3. Goal-success vs collision-rate trends
-4. Reward component stacked area chart
-5. Interactive 3-D flight trajectory
-6. Distance-sensor heat-map
-7. Batch evaluation statistics
-8. Environment + policy sanity check
-
----
+The notebook supports synthetic fallback data when training logs are not present.
 
 ## Extending the Project
 
-| Goal | Where to change |
-|------|----------------|
-| Different algorithm (SAC, TD3) | `training_config.py` → `algorithm`, `agent/train.py` |
-| Add camera observations | `env_config.py` → `use_camera=True`, update `state_processing.py` |
-| Custom obstacle maps | `simulations/environments/` + update `airsim_settings.json` |
-| Multi-agent training | Wrap env with SB3 `SubprocVecEnv`, set `n_envs > 1` |
-| ONNX export for deployment | `model.DroneActorCritic.export_onnx(path, obs_dim)` |
-| Custom reward shaping | Edit `environment/reward_function.py` |
-
----
+| Goal | Change Area |
+|---|---|
+| Try another algorithm (SAC/TD3) | `training_config.py`, `agent/train.py` |
+| Add camera features | `env_config.py`, `state_processing.py` |
+| Custom map or obstacle setup | `simulations/airsim_settings.json` |
+| Increase parallel rollout | `training_config.py` (`n_envs > 1`) |
+| Export policy to ONNX | `agent/model.py` |
+| Modify reward shaping | `environment/reward_function.py` |
 
 ## Troubleshooting
 
-| Symptom | Fix |
-|---------|-----|
-| `ModuleNotFoundError: airsim` | Install AirSim or run without it — mock client activates automatically |
-| `ConnectionRefusedError` on port 41451 | Start the AirSim binary before running training |
-| CUDA out-of-memory | Reduce `batch_size` or set `device="cpu"` in `training_config.py` |
-| Drone doesn't learn | Increase `total_timesteps`, check reward scale, try `ent_coef=0.05` |
-| TensorBoard not showing | Run `pip install tensorboard` and check `logs/tensorboard/` path |
+| Problem | Fix |
+|---|---|
+| `ModuleNotFoundError: airsim` | Install AirSim or use mock fallback |
+| AirSim connection refused | Start AirSim binary first |
+| CUDA out of memory | Reduce `batch_size` or use CPU |
+| Weak learning progress | Increase timesteps and tune rewards |
+| TensorBoard empty | Verify `logs/tensorboard/` path and dependency |
 
----
 
