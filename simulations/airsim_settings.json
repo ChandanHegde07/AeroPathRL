@@ -1,0 +1,76 @@
+{
+  "SeeDocsAt": "https://github.com/microsoft/AirSim/blob/main/docs/settings.md",
+  "SettingsVersion": 1.2,
+  "SimMode": "Multirotor",
+  "ClockSpeed": 1.0,
+  "LocalHostIp": "127.0.0.1",
+  "ApiServerPort": 41451,
+
+  "Vehicles": {
+    "Drone1": {
+      "VehicleType": "SimpleFlight",
+      "AutoCreate": true,
+      "X": 0, "Y": 0, "Z": 0,
+      "Pitch": 0, "Roll": 0, "Yaw": 0,
+
+      "Sensors": {
+        "Distance0": {
+          "SensorType": 5, "Enabled": true,
+          "ReportingDelay": 0, "DrawDebugPoints": false,
+          "Yaw": 0,   "Pitch": 0,  "Roll": 0
+        },
+        "Distance1": {
+          "SensorType": 5, "Enabled": true,
+          "Yaw": 45,  "Pitch": 0,  "Roll": 0
+        },
+        "Distance2": {
+          "SensorType": 5, "Enabled": true,
+          "Yaw": 90,  "Pitch": 0,  "Roll": 0
+        },
+        "Distance3": {
+          "SensorType": 5, "Enabled": true,
+          "Yaw": 135, "Pitch": 0,  "Roll": 0
+        },
+        "Distance4": {
+          "SensorType": 5, "Enabled": true,
+          "Yaw": 180, "Pitch": 0,  "Roll": 0
+        },
+        "Distance5": {
+          "SensorType": 5, "Enabled": true,
+          "Yaw": 225, "Pitch": 0,  "Roll": 0
+        },
+        "Distance6": {
+          "SensorType": 5, "Enabled": true,
+          "Yaw": 270, "Pitch": 0,  "Roll": 0
+        },
+        "Distance7": {
+          "SensorType": 5, "Enabled": true,
+          "Yaw": 315, "Pitch": 0,  "Roll": 0
+        }
+      }
+    }
+  },
+
+  "CameraDefaults": {
+    "CaptureSettings": [
+      {
+        "ImageType": 0,
+        "Width": 84, "Height": 84,
+        "FOV_Degrees": 90,
+        "TargetGamma": 1.5
+      }
+    ]
+  },
+
+  "SegmentationSettings": {
+    "InitMethod": "",
+    "MeshNamingMethod": "",
+    "OverrideExisting": false
+  },
+
+  "PawnPaths": {
+    "DefaultQuadrotor": {
+      "PawnBP": "Class'/AirSim/Blueprints/BP_FlyingPawn.BP_FlyingPawn_C'"
+    }
+  }
+}

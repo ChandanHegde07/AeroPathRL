@@ -1,0 +1,50 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python cache / build
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Project logs and runtime artifacts
+logs/*
+!logs/.gitkeep
+*.log
+
+# Trained models / checkpoints / eval outputs
+models/saved_models/*
+!models/saved_models/.gitkeep
+*.zip
+*.onnx
+eval_results/
+
+# AirSim / simulation local artifacts
+simulations/environments/
+
+# Environment / local config
+.env
+.env.*
+
