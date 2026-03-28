@@ -36,18 +36,14 @@ class StateProcessor:
         self.cfg = cfg
         self._target = np.array(cfg.target_position, dtype=np.float32)
 
-        # Pre-compute observation dimension
         self.obs_dim = (
-            3           # relative position
-            + 3         # velocity
-            + 3         # orientation
+            3
+            + 3
+            + 3
             + cfg.num_distance_sensors
-            + 1         # scalar distance to target
+            + 1
         )
 
-    # ──────────────────────────────────────────────────────────────────────────
-    # Public API
-    # ──────────────────────────────────────────────────────────────────────────
 
     def process(
         self,
@@ -103,7 +99,7 @@ class StateProcessor:
         pos = np.array(position, dtype=np.float32)
         vel = np.array(velocity, dtype=np.float32) / self.cfg.max_velocity
         ori_rad = np.array(orientation, dtype=np.float32)
-        ori_norm = ori_rad / math.pi          # normalise to [-1, 1]
+        ori_norm = ori_rad / math.pi
         sensors = self._normalise_sensors(sensor_readings)
 
         diag = math.sqrt(
@@ -119,9 +115,6 @@ class StateProcessor:
         )
         return np.clip(obs, -1.0, 1.0)
 
-    # ──────────────────────────────────────────────────────────────────────────
-    # Private helpers (AirSim-specific)
-    # ──────────────────────────────────────────────────────────────────────────
 
     @staticmethod
     def _extract_position(state: Any) -> np.ndarray:
@@ -139,27 +132,23 @@ class StateProcessor:
         q = state.kinematics_estimated.orientation
         w, x, y, z = q.w_val, q.x_val, q.y_val, q.z_val
 
-        # Roll
         sinr_cosp = 2 * (w * x + y * z)
         cosr_cosp = 1 - 2 * (x * x + y * y)
         roll = math.atan2(sinr_cosp, cosr_cosp)
 
-        # Pitch
         sinp = 2 * (w * y - z * x)
         sinp = max(-1.0, min(1.0, sinp))
         pitch = math.asin(sinp)
 
-        # Yaw
         siny_cosp = 2 * (w * z + x * y)
         cosy_cosp = 1 - 2 * (y * y + z * z)
         yaw = math.atan2(siny_cosp, cosy_cosp)
 
         euler = np.array([roll, pitch, yaw], dtype=np.float32)
-        return euler / math.pi   # normalise to [-1, 1]
+        return euler / math.pi
 
     def _normalise_sensors(self, readings: List[float]) -> np.ndarray:
         arr = np.array(readings[: self.cfg.num_distance_sensors], dtype=np.float32)
-        # Pad if fewer readings than expected
         if len(arr) < self.cfg.num_distance_sensors:
             pad = np.full(
                 self.cfg.num_distance_sensors - len(arr),

@@ -21,9 +21,6 @@ from utils.visualization import plot_episode_trajectory, plot_evaluation_summary
 console = Console()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Episode runner
-# ─────────────────────────────────────────────────────────────────────────────
 
 class EpisodeResult:
     """Holds all data from a single evaluation episode."""
@@ -84,9 +81,6 @@ def _run_episode(
     return result
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Evaluator
-# ─────────────────────────────────────────────────────────────────────────────
 
 class DroneEvaluator:
     """
@@ -109,7 +103,6 @@ class DroneEvaluator:
         self.model = PPO.load(str(self.model_path))
         console.print("[green]Model loaded.[/green]")
 
-    # ── Public API ────────────────────────────────────────────────────────────
 
     def evaluate_single(self, render: bool = True) -> EpisodeResult:
         """Run and display one evaluation episode."""
@@ -144,7 +137,6 @@ class DroneEvaluator:
 
         return stats
 
-    # ── Statistics ────────────────────────────────────────────────────────────
 
     @staticmethod
     def _compute_stats(results: List[EpisodeResult]) -> Dict:
@@ -166,7 +158,6 @@ class DroneEvaluator:
             "mean_path_length":float(np.mean(path_lengths)),
         }
 
-    # ── Display helpers ───────────────────────────────────────────────────────
 
     @staticmethod
     def _print_single_result(result: EpisodeResult):
@@ -191,7 +182,6 @@ class DroneEvaluator:
                 table.add_row(k, str(v))
         console.print(table)
 
-    # ── Persistence ───────────────────────────────────────────────────────────
 
     @staticmethod
     def _save_results(
@@ -201,11 +191,9 @@ class DroneEvaluator:
     ):
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Summary JSON
         with open(output_dir / "eval_stats.json", "w") as f:
             json.dump(stats, f, indent=2)
 
-        # Per-episode trajectories CSV
         rows = []
         for ep_idx, r in enumerate(results):
             for step_idx, pos in enumerate(r.positions):
@@ -219,9 +207,6 @@ class DroneEvaluator:
         console.print(f"[green]Results saved to {output_dir}[/green]")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CLI
-# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import argparse

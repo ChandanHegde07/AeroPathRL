@@ -21,7 +21,6 @@ import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 
-# Use a clean style that works without GUI
 plt.rcParams.update({
     "figure.facecolor": "#0f1117",
     "axes.facecolor":   "#1a1d27",
@@ -40,9 +39,6 @@ plt.rcParams.update({
 _PALETTE = ["#4fc3f7", "#81c784", "#ff8a65", "#ba68c8", "#ffd54f", "#f06292"]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Training curves
-# ─────────────────────────────────────────────────────────────────────────────
 
 def plot_training_rewards(
     rewards: List[float],
@@ -82,9 +78,8 @@ def plot_reward_components(
     component_history : List of dicts from RewardInfo.as_dict()
     """
     df = pd.DataFrame(component_history)
-    # Keep only component columns (exclude 'reward/total')
     cols = [c for c in df.columns if c != "reward/total"]
-    df = df[cols].clip(lower=0)   # show positive contributions only
+    df = df[cols].clip(lower=0)
 
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.stackplot(
@@ -104,9 +99,6 @@ def plot_reward_components(
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# 3-D trajectory
-# ─────────────────────────────────────────────────────────────────────────────
 
 def plot_episode_trajectory(
     positions: List[Tuple[float, float, float]],
@@ -120,7 +112,6 @@ def plot_episode_trajectory(
     fig = plt.figure(figsize=(10, 7))
     ax  = fig.add_subplot(111, projection="3d")
 
-    # Colour path by progress (blue → green)
     n = len(xs)
     colours = plt.cm.cool(np.linspace(0, 1, max(n, 1)))
     for i in range(max(n - 1, 0)):
@@ -131,7 +122,6 @@ def plot_episode_trajectory(
             color=colours[i], lw=1.5,
         )
 
-    # Markers
     ax.scatter(*spawn,  s=120, c="#ffd54f", marker="^", zorder=5, label="Spawn")
     ax.scatter(*target, s=180, c="#81c784", marker="*", zorder=5, label="Target")
     if positions:
@@ -149,9 +139,6 @@ def plot_episode_trajectory(
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Evaluation summary
-# ─────────────────────────────────────────────────────────────────────────────
 
 def plot_evaluation_summary(
     stats: Dict[str, float],
@@ -171,12 +158,9 @@ def plot_evaluation_summary(
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Sensor heat-map
-# ─────────────────────────────────────────────────────────────────────────────
 
 def plot_sensor_heatmap(
-    sensor_history: np.ndarray,   # shape (steps, n_sensors)
+    sensor_history: np.ndarray,
     sensor_max: float = 20.0,
     save_path: Optional[str] = None,
 ) -> plt.Figure:
@@ -198,9 +182,6 @@ def plot_sensor_heatmap(
     return fig
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Helper
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _maybe_save(fig: plt.Figure, path: Optional[str]):
     if path:

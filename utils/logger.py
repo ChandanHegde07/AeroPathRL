@@ -52,16 +52,14 @@ class TrainingLogger:
         self._step     = 0
         self._start_t  = time.time()
         self._csv_file = open(self._csv_path, "w", newline="")
-        self._csv_writer: Optional[csv.DictWriter] = None   # created on first write
+        self._csv_writer: Optional[csv.DictWriter] = None
 
-        # TensorBoard
         self._tb: Optional[Any] = None
         if use_tb and _TB_AVAILABLE:
             tb_dir = self.log_dir / "tensorboard" / run_name
             self._tb = SummaryWriter(log_dir=str(tb_dir))
             console.print(f"[blue]TensorBoard log: {tb_dir}[/blue]")
 
-    # ──────────────────────────────────────────────────────────────────────────
 
     def log(self, metrics: Dict[str, float], step: Optional[int] = None):
         """
@@ -79,7 +77,6 @@ class TrainingLogger:
         elapsed = time.time() - self._start_t
         row = {"step": step, "elapsed_s": f"{elapsed:.1f}", **metrics}
 
-        # ── CSV ──────────────────────────────────────────────────────────────
         if self._csv_writer is None:
             self._csv_writer = csv.DictWriter(
                 self._csv_file, fieldnames=list(row.keys())
@@ -88,7 +85,6 @@ class TrainingLogger:
         self._csv_writer.writerow(row)
         self._csv_file.flush()
 
-        # ── TensorBoard ───────────────────────────────────────────────────────
         if self._tb is not None:
             for k, v in metrics.items():
                 try:

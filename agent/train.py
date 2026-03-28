@@ -10,7 +10,6 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-# ── Stable-Baselines3 ────────────────────────────────────────────────────────
 from stable_baselines3 import PPO, SAC, TD3
 from stable_baselines3.common.callbacks import (
     BaseCallback,
@@ -34,9 +33,6 @@ from utils.logger import TrainingLogger
 
 console = Console()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Custom callback
-# ─────────────────────────────────────────────────────────────────────────────
 
 class DroneTrainingCallback(BaseCallback):
     """
@@ -54,7 +50,7 @@ class DroneTrainingCallback(BaseCallback):
     def _on_step(self) -> bool:
         infos = self.locals.get("infos", [])
         for info in infos:
-            if "episode" in info:  # Monitor wrapper signals end-of-episode
+            if "episode" in info:
                 ep_r = info["episode"]["r"]
                 self._episode_rewards.append(ep_r)
                 self._ep_count += 1
@@ -73,9 +69,6 @@ class DroneTrainingCallback(BaseCallback):
         return True
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Environment factory
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _make_env(cfg: EnvConfig, rank: int = 0, seed: int = 0):
     """Return a callable that creates a monitored DroneNavigationEnv."""
@@ -100,9 +93,6 @@ def build_vec_env(
     return vec
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Trainer class
-# ─────────────────────────────────────────────────────────────────────────────
 
 class DroneTrainer:
     """
@@ -123,19 +113,14 @@ class DroneTrainer:
         self.train_cfg = train_cfg
         self._logger   = TrainingLogger(log_dir=str(train_cfg.log_dir))
 
-        # Create directories
         train_cfg.log_dir.mkdir(parents=True, exist_ok=True)
         train_cfg.model_dir.mkdir(parents=True, exist_ok=True)
         train_cfg.tensorboard_log.mkdir(parents=True, exist_ok=True)
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Public API
-    # ─────────────────────────────────────────────────────────────────────────
 
     def train(self, resume_from: Optional[str] = None) -> PPO:
         self._print_header()
 
-        # ── Environments ─────────────────────────────────────────────────────
         console.print("[cyan]Building training environment…[/cyan]")
         train_env = build_vec_env(
             self.env_cfg,
@@ -144,7 +129,6 @@ class DroneTrainer:
         )
         eval_env = DummyVecEnv([_make_env(self.env_cfg, seed=self.train_cfg.seed + 999)])
 
-        # ── Model ─────────────────────────────────────────────────────────────
         policy_kwargs = build_sb3_policy_kwargs(
             net_arch=self.train_cfg.net_arch,
             activation_fn_name=self.train_cfg.activation_fn,
@@ -160,10 +144,8 @@ class DroneTrainer:
             f"{sum(p.numel() for p in model.policy.parameters()):,}[/green]"
         )
 
-        # ── Callbacks ─────────────────────────────────────────────────────────
         callbacks = self._build_callbacks(eval_env)
 
-        # ── Training ──────────────────────────────────────────────────────────
         console.print(
             Panel(
                 f"[bold]Starting PPO training[/bold]\n"
@@ -183,7 +165,6 @@ class DroneTrainer:
         )
         elapsed = time.time() - t0
 
-        # ── Save final model ──────────────────────────────────────────────────
         final_path = self.train_cfg.model_dir / self.train_cfg.final_model_name
         model.save(str(final_path))
         console.print(
@@ -195,9 +176,6 @@ class DroneTrainer:
         eval_env.close()
         return model
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Private helpers
-    # ─────────────────────────────────────────────────────────────────────────
 
     def _build_model(self, env, policy_kwargs: dict) -> PPO:
         tc = self.train_cfg
@@ -264,9 +242,6 @@ class DroneTrainer:
         console.print(table)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# CLI entry point
-# ─────────────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
     import argparse

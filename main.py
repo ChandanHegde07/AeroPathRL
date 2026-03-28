@@ -11,9 +11,6 @@ from rich.table import Table
 console = Console()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Sub-command handlers
-# ─────────────────────────────────────────────────────────────────────────────
 
 def cmd_train(args: argparse.Namespace):
     from config.env_config import ENV_CONFIG
@@ -81,9 +78,6 @@ def cmd_info(_args: argparse.Namespace):
     console.print(train_table)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Argument parsing
-# ─────────────────────────────────────────────────────────────────────────────
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -93,7 +87,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    # ── train ────────────────────────────────────────────────────────────────
     p_train = sub.add_parser("train", help="Train a PPO agent")
     p_train.add_argument("--resume",     type=str, default=None,
                          help="Path to saved model to resume training from")
@@ -102,7 +95,6 @@ def build_parser() -> argparse.ArgumentParser:
     p_train.add_argument("--n_envs",     type=int, default=None,
                          help="Override number of parallel environments")
 
-    # ── evaluate ─────────────────────────────────────────────────────────────
     p_eval = sub.add_parser("evaluate", help="Evaluate a trained agent")
     p_eval.add_argument("--model",      required=True, help="Path to .zip model")
     p_eval.add_argument("--mode",       default="batch", choices=["single", "batch"])
@@ -114,19 +106,14 @@ def build_parser() -> argparse.ArgumentParser:
                         help="Save trajectory CSV and stats JSON")
     p_eval.add_argument("--out_dir",    default="eval_results/")
 
-    # ── demo ─────────────────────────────────────────────────────────────────
     p_demo = sub.add_parser("demo", help="Run one rendered episode")
     p_demo.add_argument("--model", required=True, help="Path to .zip model")
 
-    # ── info ─────────────────────────────────────────────────────────────────
     sub.add_parser("info", help="Print current configuration")
 
     return parser
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Main
-# ─────────────────────────────────────────────────────────────────────────────
 
 def main():
     console.print(

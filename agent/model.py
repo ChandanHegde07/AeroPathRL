@@ -7,9 +7,6 @@ import torch.nn as nn
 from torch import Tensor
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Building blocks
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _mlp_block(
     in_dim: int,
@@ -37,9 +34,6 @@ def _build_mlp(
     return nn.Sequential(*layers)
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Standalone actor-critic model
-# ─────────────────────────────────────────────────────────────────────────────
 
 class DroneActorCritic(nn.Module):
     """
@@ -71,29 +65,24 @@ class DroneActorCritic(nn.Module):
         actor_arch  = actor_arch  or [128]
         critic_arch = critic_arch or [128]
 
-        # ── Shared encoder ───────────────────────────────────────────────────
         encoder_dims = [obs_dim] + shared_arch
         self.encoder = _build_mlp(encoder_dims, activation, layer_norm=True)
         latent_dim = shared_arch[-1]
 
-        # ── Actor head ───────────────────────────────────────────────────────
         actor_dims = [latent_dim] + actor_arch
         self.actor_net = _build_mlp(actor_dims, activation)
         self.actor_mean = nn.Linear(actor_arch[-1], action_dim)
 
-        # Learnable log-std (shared across all state dimensions)
         self.log_std = nn.Parameter(
             torch.ones(action_dim) * log_std_init
         )
 
-        # ── Critic head ──────────────────────────────────────────────────────
         critic_dims = [latent_dim] + critic_arch
         self.critic_net = _build_mlp(critic_dims, activation)
         self.critic_out = nn.Linear(critic_arch[-1], 1)
 
         self._init_weights()
 
-    # ── Forward passes ───────────────────────────────────────────────────────
 
     def encode(self, obs: Tensor) -> Tensor:
         return self.encoder(obs)
@@ -127,18 +116,15 @@ class DroneActorCritic(nn.Module):
         dist = torch.distributions.Normal(mean, std)
         return dist.sample().clamp(-1.0, 1.0)
 
-    # ── Weight initialisation ────────────────────────────────────────────────
 
     def _init_weights(self):
         for module in self.modules():
             if isinstance(module, nn.Linear):
                 nn.init.orthogonal_(module.weight, gain=1.0)
                 nn.init.constant_(module.bias, 0.0)
-        # Smaller gain for the output layers
         nn.init.orthogonal_(self.actor_mean.weight, gain=0.01)
         nn.init.orthogonal_(self.critic_out.weight, gain=1.0)
 
-    # ── Utility ──────────────────────────────────────────────────────────────
 
     def count_parameters(self) -> int:
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
@@ -158,9 +144,6 @@ class DroneActorCritic(nn.Module):
         print(f"[model] ONNX exported → {path}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# SB3 policy_kwargs factory
-# ─────────────────────────────────────────────────────────────────────────────
 
 def build_sb3_policy_kwargs(
     net_arch: List[int] = None,

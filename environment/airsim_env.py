@@ -1,12 +1,3 @@
-"""
-environment/airsim_env.py
-Custom Gymnasium environment wrapping AirSim's multirotor API.
-
-When AirSim is NOT installed the environment falls back to a lightweight
-mock so that the rest of the pipeline (training, evaluation, notebooks)
-can be exercised without a running simulator.
-"""
-
 from __future__ import annotations
 
 import math
@@ -21,17 +12,11 @@ from config.env_config import EnvConfig, ENV_CONFIG
 from environment.state_processing import StateProcessor
 from environment.reward_function import RewardFunction, RewardInfo
 
-# ── Try to import AirSim; fall back gracefully ───────────────────────────────
 try:
-    import airsim  # type: ignore
+    import airsim
     AIRSIM_AVAILABLE = True
 except ImportError:
     AIRSIM_AVAILABLE = False
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Lightweight mock client (used when AirSim is not installed)
-# ─────────────────────────────────────────────────────────────────────────────
 
 class _MockVector3r:
     def __init__(self, x=0.0, y=0.0, z=0.0):
@@ -53,14 +38,12 @@ class _MockState:
         self.collision_info = type("CI", (), {"has_collided": False})()
 
 class _MockAirSimClient:
-    """Simulates drone physics with simple Euler integration."""
 
     def __init__(self):
         self._pos  = list(ENV_CONFIG.spawn_position)
         self._vel  = [0.0, 0.0, 0.0]
         self._collided = False
 
-    # AirSim API surface used by DroneEnv
     def confirmConnection(self):          pass
     def enableApiControl(self, *a, **k):  pass
     def armDisarm(self, *a, **k):         pass
@@ -71,7 +54,6 @@ class _MockAirSimClient:
         return _MockState(tuple(self._pos))
 
     def getDistanceSensorData(self, name, vehicle=""):
-        # Return random-ish distances proportional to obstacle positions
         return type("DS", (), {"distance": float(np.random.uniform(3, 20))})()
 
     def moveByVelocityAsync(self, vx, vy, vz, duration, **kwargs):
@@ -80,7 +62,6 @@ class _MockAirSimClient:
         self._pos[0] += vx * dt
         self._pos[1] += vy * dt
         self._pos[2] += vz * dt
-        # Simple collision mock: hit ground
         if self._pos[2] > -1.0:
             self._collided = True
         return self
@@ -98,20 +79,7 @@ class _MockAirSimClient:
     def ping(self):
         return True
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Main Gymnasium Environment
-# ─────────────────────────────────────────────────────────────────────────────
-
 class DroneNavigationEnv(gym.Env):
-    """
-    Gymnasium-compatible environment for drone navigation via RL.
-
-    Observation : float32 vector (see StateProcessor for layout)
-    Action      : float32 vector [vx, vy, vz] ∈ [-1, 1]^3
-                  scaled to ±max_velocity m/s before sending to AirSim
-    """
-
     metadata = {"render_modes": ["human", "none"]}
 
     def __init__(
@@ -126,7 +94,6 @@ class DroneNavigationEnv(gym.Env):
         self._processor  = StateProcessor(cfg)
         self._reward_fn  = RewardFunction(cfg)
 
-        # ── Spaces ──────────────────────────────────────────────────────────
         obs_dim = self._processor.obs_dim
         self.observation_space = spaces.Box(
             low=-1.0, high=1.0, shape=(obs_dim,), dtype=np.float32
@@ -135,18 +102,12 @@ class DroneNavigationEnv(gym.Env):
             low=-1.0, high=1.0, shape=(3,), dtype=np.float32
         )
 
-        # ── AirSim client ────────────────────────────────────────────────────
         self._client = self._connect()
 
-        # ── Episode tracking ─────────────────────────────────────────────────
         self._step_count  = 0
         self._prev_pos    = cfg.spawn_position
         self._episode_reward = 0.0
         self._reward_log: List[RewardInfo] = []
-
-    # ─────────────────────────────────────────────────────────────────────────
-    # Gymnasium API
-    # ─────────────────────────────────────────────────────────────────────────
 
     def reset(
         self,
@@ -173,7 +134,6 @@ class DroneNavigationEnv(gym.Env):
     def step(
         self, action: np.ndarray
     ) -> Tuple[np.ndarray, float, bool, bool, Dict]:
-        # Scale action → velocity command
         vx, vy, vz = (action * self.cfg.max_velocity).tolist()
         self._client.moveByVelocityAsync(
             vx, vy, vz,
@@ -181,13 +141,11 @@ class DroneNavigationEnv(gym.Env):
         ).join()
         time.sleep(max(0.0, self.cfg.step_duration_sec - self.cfg.action_duration_sec))
 
-        # Current state
         state       = self._client.getMultirotorState()
         col_info    = self._client.simGetCollisionInfo()
         curr_pos    = self._get_position(state)
         sensors     = self._read_sensors()
 
-        # Flags
         collided    = col_info.has_collided
         oob         = self._is_out_of_bounds(curr_pos)
         goal        = self._dist(curr_pos, self.cfg.target_position) < self.cfg.goal_tolerance
@@ -237,9 +195,6 @@ class DroneNavigationEnv(gym.Env):
         except Exception:
             pass
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Private helpers
-    # ─────────────────────────────────────────────────────────────────────────
 
     def _connect(self):
         if AIRSIM_AVAILABLE:
