@@ -92,4 +92,5 @@ Important:
 - Train: `python3 main.py train`
 - Resume training: `python3 main.py train --resume <model_path>`
 - Evaluate: `python3 main.py evaluate --model <model_path> --mode batch --n 20`
+- Single episode with live 2D simulation: `python3 main.py evaluate --model <model_path> --mode single --render2d`
 - Demo run: `python3 main.py demo --model <model_path>`

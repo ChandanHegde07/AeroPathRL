@@ -33,7 +33,7 @@ def cmd_evaluate(args: argparse.Namespace):
     evaluator = DroneEvaluator(model_path=args.model, env_cfg=ENV_CONFIG)
 
     if args.mode == "single":
-        evaluator.evaluate_single(render=args.render)
+        evaluator.evaluate_single(render=args.render, render_2d=args.render2d)
     else:
         evaluator.evaluate_batch(
             n_episodes=args.n,
@@ -100,6 +100,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval.add_argument("--mode",       default="batch", choices=["single", "batch"])
     p_eval.add_argument("--n",          type=int, default=20, help="Episodes (batch)")
     p_eval.add_argument("--render",     action="store_true")
+    p_eval.add_argument("--render2d",   action="store_true",
+                        help="Show live 2D trajectory window (single mode)")
     p_eval.add_argument("--stochastic", action="store_true",
                         help="Use stochastic actions (default: deterministic)")
     p_eval.add_argument("--save",       action="store_true",

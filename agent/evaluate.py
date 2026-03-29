@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from rich.console import Console
@@ -20,6 +21,56 @@ from utils.visualization import plot_episode_trajectory, plot_evaluation_summary
 
 console = Console()
 
+
+
+class LiveTrajectory2D:
+    """Simple live 2D trajectory viewer (X-Z plane)."""
+
+    def __init__(self, env_cfg: EnvConfig):
+        self.cfg = env_cfg
+        self.path_x: List[float] = []
+        self.path_z: List[float] = []
+
+        plt.ion()
+        self.fig, self.ax = plt.subplots(figsize=(8, 5))
+        self.fig.canvas.manager.set_window_title("Drone Live Simulation (2D)")
+        self.ax.set_title("Drone Trajectory (X-Z Plane)")
+        self.ax.set_xlabel("X (m)")
+        self.ax.set_ylabel("Z (m)")
+        self.ax.grid(True, alpha=0.3)
+        self.ax.set_xlim(-2, self.cfg.boundary_x + 2)
+        self.ax.set_ylim(-self.cfg.boundary_z - 2, 2)
+
+        sx, _, sz = self.cfg.spawn_position
+        tx, _, tz = self.cfg.target_position
+        self.ax.scatter([sx], [sz], marker="^", s=80, label="Spawn", color="#c1121f")
+        self.ax.scatter([tx], [tz], marker="*", s=130, label="Target", color="#2d6a4f")
+
+        (self.path_line,) = self.ax.plot([], [], lw=2.0, color="#006d77", label="Path")
+        self.current_point = self.ax.scatter([], [], s=70, color="#ff7f50", label="Drone")
+        self.info_text = self.ax.text(
+            0.02, 0.98, "", transform=self.ax.transAxes, va="top", fontsize=10
+        )
+        self.ax.legend(loc="best")
+
+    def update(self, position: Tuple[float, float, float], step: int, total_reward: float):
+        x, _, z = position
+        dist = np.linalg.norm(np.array(position) - np.array(self.cfg.target_position))
+
+        self.path_x.append(x)
+        self.path_z.append(z)
+        self.path_line.set_data(self.path_x, self.path_z)
+        self.current_point.set_offsets(np.array([[x, z]]))
+        self.info_text.set_text(
+            f"step: {step}\nreward: {total_reward:.2f}\ndist to target: {dist:.2f} m"
+        )
+
+        self.fig.canvas.draw_idle()
+        plt.pause(0.001)
+
+    def close(self):
+        plt.ioff()
+        plt.show()
 
 
 class EpisodeResult:
@@ -52,6 +103,7 @@ def _run_episode(
     model: PPO,
     deterministic: bool = True,
     render: bool = False,
+    live_viewer: Optional[LiveTrajectory2D] = None,
 ) -> EpisodeResult:
     result = EpisodeResult()
     obs, _ = env.reset()
@@ -74,6 +126,8 @@ def _run_episode(
 
         if render:
             env.render()
+        if live_viewer is not None and pos:
+            live_viewer.update(pos, result.steps, result.total_reward)
 
     result.goal_reached = any(i.get("goal_reached", False) for i in result.step_infos)
     result.collision    = any(i.get("collision",    False) for i in result.step_infos)
@@ -104,11 +158,20 @@ class DroneEvaluator:
         console.print("[green]Model loaded.[/green]")
 
 
-    def evaluate_single(self, render: bool = True) -> EpisodeResult:
+    def evaluate_single(self, render: bool = True, render_2d: bool = False) -> EpisodeResult:
         """Run and display one evaluation episode."""
         env = DroneNavigationEnv(cfg=self.env_cfg)
-        result = _run_episode(env, self.model, deterministic=True, render=render)
+        viewer = LiveTrajectory2D(self.env_cfg) if render_2d else None
+        result = _run_episode(
+            env,
+            self.model,
+            deterministic=True,
+            render=render,
+            live_viewer=viewer,
+        )
         env.close()
+        if viewer is not None:
+            viewer.close()
         self._print_single_result(result)
         return result
 
@@ -216,6 +279,8 @@ if __name__ == "__main__":
     parser.add_argument("--mode",    default="batch", choices=["single", "batch"])
     parser.add_argument("--n",       type=int, default=20, help="Episodes (batch mode)")
     parser.add_argument("--render",  action="store_true")
+    parser.add_argument("--render2d", action="store_true",
+                        help="Show live 2D trajectory window (single mode)")
     parser.add_argument("--save",    action="store_true", help="Save trajectory data")
     parser.add_argument("--out_dir", default="eval_results/")
     args = parser.parse_args()
@@ -223,7 +288,7 @@ if __name__ == "__main__":
     evaluator = DroneEvaluator(model_path=args.model)
 
     if args.mode == "single":
-        evaluator.evaluate_single(render=args.render)
+        evaluator.evaluate_single(render=args.render, render_2d=args.render2d)
     else:
         evaluator.evaluate_batch(
             n_episodes=args.n,
