@@ -586,15 +586,26 @@
       <div class="info-cell"><div class="info-key">Algorithm</div><div class="info-val"><span class="hi">PPO</span> · MlpPolicy</div></div>
       <div class="info-cell"><div class="info-key">Network</div><div class="info-val"><span class="hi">[256, 256]</span> tanh</div></div>
       <div class="info-cell"><div class="info-key">Timesteps</div><div class="info-val"><span class="amber">1,000,000</span></div></div>
+      <div class="info-cell"><div class="info-key">Parallel Envs</div><div class="info-val">1</div></div>
       <div class="info-cell"><div class="info-key">Gamma / GAE-λ</div><div class="info-val"><span class="hi">0.99</span> / 0.95</div></div>
+      <div class="info-cell"><div class="info-key">Learning Rate</div><div class="info-val">3e-4</div></div>
+      <div class="info-cell"><div class="info-key">Batch / Epochs</div><div class="info-val">64 / 10</div></div>
+      <div class="info-cell"><div class="info-key">Eval / Save Freq</div><div class="info-val">10,000 / 50,000</div></div>
       <div class="info-cell"><div class="info-key">Spawn Position</div><div class="info-val">(0.0, 0.0, −5.0)</div></div>
       <div class="info-cell"><div class="info-key">Target Position</div><div class="info-val"><span class="hi">(30.0, 0.0, −10.0)</span></div></div>
+      <div class="info-cell"><div class="info-key">Episode Max Steps</div><div class="info-val">500</div></div>
+      <div class="info-cell"><div class="info-key">Step / Action Δt</div><div class="info-val">0.1s / 0.1s</div></div>
       <div class="info-cell"><div class="info-key">Goal Tolerance</div><div class="info-val">2.0 m</div></div>
       <div class="info-cell"><div class="info-key">Max Velocity</div><div class="info-val">5.0 m/s per axis</div></div>
+      <div class="info-cell"><div class="info-key">Distance Sensors</div><div class="info-val">8 (max 20.0 m)</div></div>
+      <div class="info-cell"><div class="info-key">Flight Bounds</div><div class="info-val">±60, ±60, ±30</div></div>
       <div class="info-cell"><div class="info-key">Observation Dim</div><div class="info-val">18</div></div>
       <div class="info-cell"><div class="info-key">Reward — Goal</div><div class="info-val"><span class="pos">+200.0</span></div></div>
       <div class="info-cell"><div class="info-key">Reward — Collision</div><div class="info-val"><span class="neg">−100.0</span></div></div>
+      <div class="info-cell"><div class="info-key">Reward — Step Penalty</div><div class="info-val"><span class="neg">−0.1</span></div></div>
+      <div class="info-cell"><div class="info-key">Reward — Progress Scale</div><div class="info-val"><span class="hi">5.0</span></div></div>
       <div class="info-cell"><div class="info-key">Action Space</div><div class="info-val">Continuous [−1,1]³</div></div>
+      <div class="info-cell"><div class="info-key">Seed</div><div class="info-val">42</div></div>
     </div>
     <p class="note">
       Data files: <code>eval_results/eval_stats.json</code> · <code>eval_results/trajectories.csv</code> · <code>logs/*.csv</code>
