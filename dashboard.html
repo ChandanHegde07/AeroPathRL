@@ -541,7 +541,7 @@
 
     <article class="card">
       <div class="card-hd">
-        <span class="card-title">Reward Per Step</span>
+        <span class="card-title" id="step-reward-title">Reward Per Step</span>
         <div class="toolbar" style="margin:0;">
           <label for="episode-select">Episode</label>
           <select id="episode-select"></select>
@@ -553,7 +553,7 @@
 
     <article class="card">
       <div class="card-hd">
-        <span class="card-title">Trajectory — X / Z Plane</span>
+        <span class="card-title" id="trajectory-title">Trajectory — X / Z Plane</span>
         <span class="tag">NED</span>
       </div>
       <div class="chart-box" id="trajectory-chart"></div>
@@ -775,7 +775,10 @@ function renderEpCharts(eps) {
 function renderEpSelect(eps) {
   const sel = document.getElementById("episode-select");
   sel.innerHTML = eps.map(e => `<option value="${e.ep}">Episode ${e.ep}</option>`).join("");
+  sel.value = String(eps[0]?.ep ?? 0);
   const meta = document.getElementById("episode-meta");
+  const rewardTitle = document.getElementById("step-reward-title");
+  const trajTitle = document.getElementById("trajectory-title");
 
   const allRewards = eps.flatMap(e => e.s.map(r => +r.reward)).filter(v => isFinite(v));
   const allX = eps.flatMap(e => e.s.map(r => +r.x)).concat([TARGET.x, SPAWN.x]).filter(v => isFinite(v));
@@ -821,9 +824,12 @@ function renderEpSelect(eps) {
       yDomain: [trajZMin, trajZMax],
       animate: true,
     });
+    rewardTitle.textContent = `Reward Per Step — Episode ${e.ep}`;
+    trajTitle.textContent = `Trajectory — X / Z Plane — Episode ${e.ep}`;
     meta.textContent = `Episode ${e.ep} · steps ${rwd.length} · return ${epReturn.toFixed(2)} · path ${pathLen.toFixed(2)} m`;
   };
   sel.addEventListener("change", draw);
+  sel.addEventListener("input", draw);
   draw();
 }
 
