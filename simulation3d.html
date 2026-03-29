@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AeroPath RL - 3D Simulation</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121b2e;
+      --panel-2: #18243b;
+      --line: #263958;
+      --text: #e6edf7;
+      --muted: #9fb0c9;
+      --accent: #00b4d8;
+      --ok: #2ec27e;
+      --warn: #ff7b54;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at 15% 10%, #12233f 0%, var(--bg) 45%);
+      color: var(--text);
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(11, 18, 32, 0.85);
+      backdrop-filter: blur(6px);
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .control label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    select, button, input[type="range"] {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 13px;
+      width: 100%;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 600;
+      background: linear-gradient(135deg, #123056, #154274);
+    }
+
+    button:hover { filter: brightness(1.08); }
+
+    .status {
+      background: var(--panel-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    #hint {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 2;
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(10, 14, 24, 0.65);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 8px;
+    }
+
+    @media (max-width: 980px) {
+      .toolbar { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div class="control">
+      <label for="episode-select">Episode</label>
+      <select id="episode-select"></select>
+    </div>
+    <div class="control">
+      <label>Playback</label>
+      <button id="play-btn">Play Trajectory</button>
+    </div>
+    <div class="control">
+      <label for="step-slider">Step</label>
+      <input id="step-slider" type="range" min="0" max="1" value="0" />
+    </div>
+    <div class="control">
+      <label for="speed-slider">Speed</label>
+      <input id="speed-slider" type="range" min="0.25" max="4" value="1" step="0.25" />
+    </div>
+    <div class="control">
+      <label>Reset</label>
+      <button id="reset-btn">Reset Episode</button>
+    </div>
+    <div class="control">
+      <label>Info</label>
+      <div id="status" class="status">Loading trajectories...</div>
+    </div>
+  </div>
+
+  <div id="canvas-wrap">
+    <div id="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
+  </div>
+
+  <script type="module">
+    const TARGET = { x: 30, y: 0, z: -10 };
+    const SPAWN = { x: 0, y: 0, z: -5 };
+    const BOUNDS = { x: 60, y: 60, z: 30 };
+
+    const episodeSelect = document.getElementById("episode-select");
+    const playBtn = document.getElementById("play-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const stepSlider = document.getElementById("step-slider");
+    const speedSlider = document.getElementById("speed-slider");
+    const statusEl = document.getElementById("status");
+    const wrap = document.getElementById("canvas-wrap");
+    let THREE = null;
+    let OrbitControls = null;
+
+    let episodes = [];
+    let currentEpisode = null;
+    let currentStep = 0;
+    let playing = false;
+    let speed = 1;
+
+    async function importWithFallback(urls) {
+      let lastErr = null;
+      for (const url of urls) {
+        try {
+          return await import(url);
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      throw lastErr || new Error("Import failed");
+    }
+
+    async function loadThree() {
+      const threeMod = await importWithFallback([
+        "https://esm.sh/three@0.161.0",
+        "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+        "https://unpkg.com/three@0.161.0/build/three.module.js?module",
+      ]);
+      THREE = threeMod;
+
+      const orbitMod = await importWithFallback([
+        "https://esm.sh/three@0.161.0/examples/jsm/controls/OrbitControls.js",
+        "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/OrbitControls.js",
+        "https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js?module",
+      ]);
+      OrbitControls = orbitMod.OrbitControls;
+    }
+
+    await loadThree();
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a1220);
+
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
+    camera.position.set(22, 18, 30);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    wrap.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.target.set(15, 8, 0);
+
+    const ambient = new THREE.AmbientLight(0xffffff, 0.58);
+    scene.add(ambient);
+
+    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
+    dir.position.set(20, 30, 12);
+    scene.add(dir);
+
+    const grid = new THREE.GridHelper(150, 30, 0x2a3b57, 0x1a2940);
+    grid.position.y = -0.01;
+    scene.add(grid);
+
+    const boundsGeom = new THREE.BoxGeometry(BOUNDS.x * 2, BOUNDS.y * 2, BOUNDS.z * 2);
+    const boundsMat = new THREE.MeshBasicMaterial({
+      color: 0x2a9d8f,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.12,
+    });
+    const boundsBox = new THREE.Mesh(boundsGeom, boundsMat);
+    boundsBox.position.set(0, 0, 0);
+    scene.add(boundsBox);
+
+    const spawn = new THREE.Mesh(
+      new THREE.SphereGeometry(0.55, 18, 18),
+      new THREE.MeshStandardMaterial({ color: 0xc1121f, emissive: 0x3b0a0f, roughness: 0.45 })
+    );
+    function worldPoint(x, y, z) {
+      // Convert NED-like logs (z down) to Three.js world (y up)
+      return new THREE.Vector3(+x, -(+z), +y);
+    }
+
+    const spawnPos = worldPoint(SPAWN.x, SPAWN.y, SPAWN.z);
+    const targetPos = worldPoint(TARGET.x, TARGET.y, TARGET.z);
+
+    spawn.position.copy(spawnPos);
+    scene.add(spawn);
+
+    const target = new THREE.Mesh(
+      new THREE.SphereGeometry(0.7, 18, 18),
+      new THREE.MeshStandardMaterial({ color: 0x1a7a4a, emissive: 0x12361f, roughness: 0.35 })
+    );
+    target.position.copy(targetPos);
+    scene.add(target);
+
+    const drone = new THREE.Mesh(
+      new THREE.SphereGeometry(0.45, 20, 20),
+      new THREE.MeshStandardMaterial({ color: 0x00b4d8, emissive: 0x034d5d, roughness: 0.4 })
+    );
+    scene.add(drone);
+
+    let fullPathLine = null;
+    let trailLine = null;
+    let lastTime = performance.now();
+    let accum = 0;
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r?\n/);
+      if (lines.length < 2) return [];
+      const headers = lines[0].split(",").map(h => h.trim());
+      return lines.slice(1).filter(Boolean).map(line => {
+        const cols = line.split(",");
+        const row = {};
+        headers.forEach((h, i) => {
+          const raw = (cols[i] ?? "").trim();
+          const n = Number(raw);
+          row[h] = raw !== "" && Number.isFinite(n) ? n : raw;
+        });
+        return row;
+      });
+    }
+
+    function buildEpisodes(rows) {
+      const byEp = new Map();
+      for (const r of rows) {
+        if (!byEp.has(r.episode)) byEp.set(r.episode, []);
+        byEp.get(r.episode).push(r);
+      }
+      return [...byEp.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([ep, steps]) => ({
+          ep,
+          steps: steps.sort((a, b) => a.step - b.step),
+        }));
+    }
+
+    function lineFromPoints(points, color, opacity, width = 2.5) {
+      const geom = new THREE.BufferGeometry().setFromPoints(points);
+      const mat = new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity,
+        linewidth: width,
+      });
+      return new THREE.Line(geom, mat);
+    }
+
+    function episodePoints(ep) {
+      return ep.steps.map(s => worldPoint(s.x, s.y, s.z));
+    }
+
+    function clampStep(step) {
+      if (!currentEpisode) return 0;
+      return Math.max(0, Math.min(step, currentEpisode.steps.length - 1));
+    }
+
+    function updateDroneAtStep(step) {
+      if (!currentEpisode) return;
+      const i = clampStep(step);
+      currentStep = i;
+      const s = currentEpisode.steps[i];
+      drone.position.copy(worldPoint(s.x, s.y, s.z));
+
+      const trailPts = episodePoints(currentEpisode).slice(0, i + 1);
+      if (trailLine) scene.remove(trailLine);
+      trailLine = lineFromPoints(trailPts, 0x00b4d8, 0.92, 3);
+      scene.add(trailLine);
+
+      stepSlider.value = String(i);
+      setStatus(
+        `Episode ${currentEpisode.ep} · Step ${i}/${currentEpisode.steps.length - 1} · Reward ${Number(s.reward).toFixed(3)}`
+      );
+    }
+
+    function loadEpisodeByIndex(idx) {
+      if (!episodes.length) return;
+      const ep = episodes[idx];
+      if (!ep) return;
+      currentEpisode = ep;
+      currentStep = 0;
+      stepSlider.min = "0";
+      stepSlider.max = String(Math.max(1, ep.steps.length - 1));
+      stepSlider.value = "0";
+
+      if (fullPathLine) scene.remove(fullPathLine);
+      if (trailLine) scene.remove(trailLine);
+      fullPathLine = lineFromPoints(episodePoints(ep), 0xff7b54, 0.88, 2);
+      scene.add(fullPathLine);
+
+      updateDroneAtStep(0);
+    }
+
+    function resize() {
+      const w = wrap.clientWidth;
+      const h = wrap.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+
+    async function loadData() {
+      const resp = await fetch("eval_results/trajectories.csv");
+      if (!resp.ok) throw new Error("Could not fetch eval_results/trajectories.csv");
+      const text = await resp.text();
+      const rows = parseCSV(text);
+      episodes = buildEpisodes(rows);
+      if (!episodes.length) throw new Error("No episodes found in trajectories CSV");
+
+      episodeSelect.innerHTML = episodes
+        .map((e, i) => `<option value="${i}">Episode ${e.ep}</option>`)
+        .join("");
+      loadEpisodeByIndex(0);
+      setStatus(`Loaded ${episodes.length} episodes`);
+    }
+
+    playBtn.addEventListener("click", () => {
+      if (currentEpisode && currentStep >= currentEpisode.steps.length - 1) {
+        updateDroneAtStep(0);
+      }
+      playing = !playing;
+      playBtn.textContent = playing ? "Pause" : "Play Trajectory";
+    });
+
+    resetBtn.addEventListener("click", () => {
+      playing = false;
+      playBtn.textContent = "Play Trajectory";
+      updateDroneAtStep(0);
+    });
+
+    episodeSelect.addEventListener("change", () => {
+      playing = false;
+      playBtn.textContent = "Play Trajectory";
+      loadEpisodeByIndex(+episodeSelect.value);
+    });
+
+    stepSlider.addEventListener("input", () => {
+      playing = false;
+      playBtn.textContent = "Play Trajectory";
+      updateDroneAtStep(+stepSlider.value);
+    });
+
+    speedSlider.addEventListener("input", () => {
+      speed = Number(speedSlider.value) || 1;
+    });
+
+    function tick(now) {
+      const dt = (now - lastTime) / 1000;
+      lastTime = now;
+      accum += dt * speed;
+
+      if (playing && currentEpisode) {
+        while (accum >= 0.045) {
+          accum -= 0.045;
+          const next = currentStep + 1;
+          if (next >= currentEpisode.steps.length) {
+            playing = false;
+            playBtn.textContent = "Play Trajectory";
+            break;
+          }
+          updateDroneAtStep(next);
+        }
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+
+    window.addEventListener("resize", resize);
+    resize();
+    requestAnimationFrame(tick);
+
+    loadData().catch(err => {
+      setStatus(`Error: ${err.message}. Serve with: python3 -m http.server`);
+    });
+  </script>
+
+  <script>
+    function setImportError() {
+      const el = document.getElementById("status");
+      if (el && el.textContent.includes("Loading trajectories")) {
+        el.textContent = "Error: 3D assets failed to load. Check internet access for CDN imports.";
+      }
+    }
+    window.addEventListener("error", () => {
+      setImportError();
+    });
+    window.addEventListener("unhandledrejection", () => setImportError());
+  </script>
+</body>
+</html>

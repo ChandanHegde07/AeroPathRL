@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AeroPath RL</title>
+  <style>
+    :root {
+      --bg: #eef3fb;
+      --ink: #0f2038;
+      --muted: #5e748f;
+      --panel: #ffffff;
+      --line: #d7e2f0;
+      --teal: #006d77;
+      --teal-2: #2a9d8f;
+      --orange: #ff7b54;
+      --shadow: 0 10px 28px rgba(15, 32, 56, 0.12);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(0,109,119,0.1), transparent 40%),
+        radial-gradient(circle at 92% 90%, rgba(255,123,84,0.08), transparent 40%),
+        var(--bg);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+    }
+
+    .home {
+      width: min(960px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 32px 28px 22px;
+      background: linear-gradient(120deg, #00384b 0%, var(--teal) 55%, var(--teal-2) 100%);
+      color: #fff;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      letter-spacing: -0.3px;
+    }
+
+    .hero p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.88);
+      max-width: 760px;
+    }
+
+    .content {
+      padding: 24px 24px 26px;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f9fbff;
+      padding: 18px;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(15, 32, 56, 0.1);
+      border-color: #bbd0e8;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-radius: 999px;
+      padding: 3px 9px;
+      margin-bottom: 9px;
+      color: #fff;
+    }
+
+    .tag.dashboard { background: var(--teal); }
+    .tag.sim3d { background: var(--orange); }
+
+    .card h2 {
+      margin: 0 0 8px;
+      font-size: 1.1rem;
+      letter-spacing: -0.2px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.58;
+    }
+
+    .footer {
+      padding: 0 24px 20px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px) {
+      .content { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="home">
+    <section class="hero">
+      <h1>AeroPath RL</h1>
+      <p>Autonomous drone navigation using reinforcement learning. Choose a view to inspect training metrics, evaluation performance, and 3D trajectory playback.</p>
+    </section>
+
+    <section class="content">
+      <a class="card" href="/dashboard.html">
+        <span class="tag dashboard">Analytics</span>
+        <h2>Open Dashboard</h2>
+        <p>View KPIs, episode reward curves, checkpoint progress, and configuration panels.</p>
+      </a>
+
+      <a class="card" href="/simulation3d.html">
+        <span class="tag sim3d">Simulation</span>
+        <h2>Open 3D View</h2>
+        <p>Replay evaluation episodes in 3D with trajectory playback, episode selection, and step controls.</p>
+      </a>
+    </section>
+
+    <p class="footer">Tip: Deploy on Vercel and open the root URL to land on this home page.</p>
+  </main>
+</body>
+</html>
