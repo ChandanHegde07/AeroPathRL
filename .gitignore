@@ -32,6 +32,7 @@ ENV/
 # Project logs and runtime artifacts
 logs/*
 !logs/.gitkeep
+!logs/*.csv
 *.log
 
 # Trained models / checkpoints / eval outputs
@@ -40,6 +41,9 @@ models/saved_models/*
 *.zip
 *.onnx
 eval_results/
+!eval_results/
+!eval_results/eval_stats.json
+!eval_results/trajectories.csv
 
 # AirSim / simulation local artifacts
 simulations/environments/
@@ -47,4 +51,3 @@ simulations/environments/
 # Environment / local config
 .env
 .env.*
-

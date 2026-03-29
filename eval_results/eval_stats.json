@@ -1,0 +1,11 @@
+{
+  "n_episodes": 100,
+  "success_rate": 1.0,
+  "collision_rate": 0.0,
+  "mean_reward": 335.88843389072133,
+  "std_reward": 0.4285828835196627,
+  "min_reward": 334.48547612260955,
+  "max_reward": 336.46628492985803,
+  "mean_steps": 57.01,
+  "mean_path_length": 31.733215403651947
+}
