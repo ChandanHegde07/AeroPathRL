@@ -7,8 +7,6 @@ tensorboard
 matplotlib
 pandas
 scipy
-airsim
-msgpack-rpc-python
 opencv-python
 pillow
 tqdm

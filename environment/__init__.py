@@ -1,4 +1,4 @@
-from .airsim_env import DroneNavigationEnv
+from .local_env import DroneNavigationEnv
 from .state_processing import StateProcessor
 from .reward_function import RewardFunction, RewardInfo
 

@@ -120,7 +120,7 @@ def main():
         Panel(
             "[bold cyan]Autonomous Drone Navigation[/bold cyan] — "
             "[green]Reinforcement Learning[/green]",
-            subtitle="PPO · AirSim · Gymnasium",
+            subtitle="PPO · Local Simulator · Gymnasium",
             border_style="cyan",
         )
     )

@@ -12,12 +12,6 @@ from config.env_config import EnvConfig, ENV_CONFIG
 from environment.state_processing import StateProcessor
 from environment.reward_function import RewardFunction, RewardInfo
 
-try:
-    import airsim
-    AIRSIM_AVAILABLE = True
-except ImportError:
-    AIRSIM_AVAILABLE = False
-
 class _MockVector3r:
     def __init__(self, x=0.0, y=0.0, z=0.0):
         self.x_val, self.y_val, self.z_val = x, y, z
@@ -37,10 +31,11 @@ class _MockState:
         self.kinematics_estimated = _MockKinematics(pos)
         self.collision_info = type("CI", (), {"has_collided": False})()
 
-class _MockAirSimClient:
+class _LocalDroneClient:
 
-    def __init__(self):
-        self._pos  = list(ENV_CONFIG.spawn_position)
+    def __init__(self, cfg: EnvConfig):
+        self._cfg = cfg
+        self._pos  = list(cfg.spawn_position)
         self._vel  = [0.0, 0.0, 0.0]
         self._collided = False
 
@@ -72,7 +67,7 @@ class _MockAirSimClient:
         return info
 
     def reset(self):
-        self._pos   = list(ENV_CONFIG.spawn_position)
+        self._pos   = list(self._cfg.spawn_position)
         self._vel   = [0.0, 0.0, 0.0]
         self._collided = False
 
@@ -197,14 +192,7 @@ class DroneNavigationEnv(gym.Env):
 
 
     def _connect(self):
-        if AIRSIM_AVAILABLE:
-            client = airsim.MultirotorClient(
-                ip=self.cfg.airsim_ip, port=self.cfg.airsim_port
-            )
-            client.confirmConnection()
-            client.enableApiControl(True)
-            return client
-        return _MockAirSimClient()
+        return _LocalDroneClient(self.cfg)
 
     def _get_obs(self) -> np.ndarray:
         state   = self._client.getMultirotorState()

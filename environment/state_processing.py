@@ -1,6 +1,6 @@
 """
 environment/state_processing.py
-Converts raw AirSim sensor data into a normalised flat observation vector
+Converts raw simulator sensor data into a normalised flat observation vector
 that can be fed directly to the policy network.
 
 Observation vector layout (total = 3 + 3 + 3 + N_sensors + 1 = 10 + N)
@@ -24,7 +24,7 @@ from config.env_config import EnvConfig, ENV_CONFIG
 
 class StateProcessor:
     """
-    Transforms raw AirSim MultirotorState + sensor readings into a
+    Transforms raw drone state + sensor readings into a
     normalised numpy observation vector.
 
     Parameters
@@ -51,11 +51,11 @@ class StateProcessor:
         sensor_readings: List[float],
     ) -> np.ndarray:
         """
-        Build the observation vector from AirSim state objects.
+        Build the observation vector from simulator state objects.
 
         Parameters
         ----------
-        multirotor_state : airsim.MultirotorState
+        multirotor_state : Any
         sensor_readings  : list of floats, one per distance sensor
 
         Returns
@@ -90,8 +90,8 @@ class StateProcessor:
         sensor_readings: Optional[List[float]] = None,
     ) -> np.ndarray:
         """
-        Build an observation vector from raw tuples (useful when AirSim is not
-        running, e.g., during unit testing or the mock environment).
+        Build an observation vector from raw tuples (useful for local
+        simulation backends and unit testing).
         """
         if sensor_readings is None:
             sensor_readings = [self.cfg.sensor_max_range] * self.cfg.num_distance_sensors

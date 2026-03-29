@@ -28,7 +28,7 @@ from stable_baselines3.common.vec_env import (
 from config.env_config import EnvConfig, ENV_CONFIG
 from config.training_config import TrainingConfig, TRAIN_CONFIG
 from agent.model import build_sb3_policy_kwargs
-from environment.airsim_env import DroneNavigationEnv
+from environment.local_env import DroneNavigationEnv
 from utils.logger import TrainingLogger
 
 console = Console()

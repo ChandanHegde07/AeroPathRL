@@ -3,7 +3,7 @@
 AeroPath RL is an autonomous drone navigation project using reinforcement learning.
 The agent is trained to fly from spawn to target in 3D space while avoiding collisions.
 
-The project uses PPO in an AirSim-based setup (with mock fallback support for development).
+The project uses PPO with a local simulator backend for development and training.
 
 ## What This Repo Includes
 

@@ -15,7 +15,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 
 from config.env_config import EnvConfig, ENV_CONFIG
 from config.training_config import TrainingConfig, TRAIN_CONFIG
-from environment.airsim_env import DroneNavigationEnv
+from environment.local_env import DroneNavigationEnv
 from utils.visualization import plot_episode_trajectory, plot_evaluation_summary
 
 console = Console()

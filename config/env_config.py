@@ -4,9 +4,6 @@ from typing import Tuple, List
 
 @dataclass
 class EnvConfig:
-    airsim_ip: str = "127.0.0.1"
-    airsim_port: int = 41451
-
     target_position: Tuple[float, float, float] = (30.0, 0.0, -10.0)
 
     spawn_position: Tuple[float, float, float] = (0.0, 0.0, -5.0)
