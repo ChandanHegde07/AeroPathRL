@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Tuple, List
 
+DIFFICULTY_LEVELS = ("easy", "medium", "hard")
+
 
 @dataclass
 class EnvConfig:
@@ -33,7 +35,8 @@ class EnvConfig:
     reward_progress_scale: float = 5.0
     reward_altitude_penalty_scale: float = -0.5
 
-    dynamic_obstacles: bool = False
+    difficulty_level: str = "medium"
+    dynamic_obstacles: bool = True
     num_random_obstacles: int = 10
 
     seed: int = 42

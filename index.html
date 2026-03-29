@@ -8,145 +8,457 @@
     :root {
       --bg: #eef3fb;
       --ink: #0f2038;
-      --muted: #5e748f;
+      --muted: #5f7490;
+      --line: #d4deed;
       --panel: #ffffff;
-      --line: #d7e2f0;
-      --teal: #006d77;
-      --teal-2: #2a9d8f;
+      --teal-1: #005766;
+      --teal-2: #007a88;
+      --teal-3: #2a9d8f;
       --orange: #ff7b54;
-      --shadow: 0 10px 28px rgba(15, 32, 56, 0.12);
+      --orange-2: #ffad8f;
       --radius: 14px;
+      --shadow: 0 12px 32px rgba(15, 32, 56, 0.12);
+      --container: min(1140px, 92vw);
     }
 
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       font-family: "Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
       color: var(--ink);
       background:
-        radial-gradient(circle at 12% 8%, rgba(0,109,119,0.1), transparent 40%),
-        radial-gradient(circle at 92% 90%, rgba(255,123,84,0.08), transparent 40%),
+        radial-gradient(circle at 5% 5%, rgba(0,122,136,0.16), transparent 38%),
+        radial-gradient(circle at 100% 95%, rgba(255,123,84,0.13), transparent 35%),
         var(--bg);
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 22px;
     }
 
-    .home {
-      width: min(960px, 100%);
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+    .container { width: var(--container); margin: 0 auto; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(8px);
+      background: rgba(238, 243, 251, 0.86);
+    }
+
+    .topbar-row {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: -0.2px;
+    }
+
+    .brand-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: linear-gradient(120deg, var(--teal-2), var(--orange));
+      box-shadow: 0 0 0 5px rgba(0,122,136,0.12);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border-radius: 10px;
+      padding: 10px 13px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      transition: transform 0.14s ease, filter 0.14s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.03); }
+
+    .btn-primary {
+      color: #fff;
+      background: linear-gradient(120deg, var(--teal-1), var(--teal-2));
+      box-shadow: 0 8px 20px rgba(0,122,136,0.24);
+    }
+
+    .btn-accent {
+      color: #fff;
+      background: linear-gradient(120deg, #f06d48, var(--orange));
+      box-shadow: 0 8px 20px rgba(240,109,72,0.25);
+    }
+
+    .btn-ghost {
+      color: var(--ink);
+      border-color: var(--line);
+      background: #fff;
     }
 
     .hero {
-      padding: 32px 28px 22px;
-      background: linear-gradient(120deg, #00384b 0%, var(--teal) 55%, var(--teal-2) 100%);
+      padding: 54px 0 32px;
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1.25fr 0.75fr;
+      align-items: stretch;
+    }
+
+    .hero-main {
+      border: 1px solid #0f7e8b33;
+      border-radius: 18px;
+      background: linear-gradient(130deg, #003847 0%, #006b7b 60%, #2a9d8f 100%);
       color: #fff;
+      padding: 30px 26px;
+      box-shadow: var(--shadow);
     }
 
-    .hero h1 {
-      margin: 0 0 8px;
-      font-size: clamp(1.5rem, 3vw, 2rem);
-      letter-spacing: -0.3px;
+    .eyebrow {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      font-weight: 700;
+      color: #d6f7f2;
+      margin-bottom: 10px;
     }
 
-    .hero p {
+    .hero-main h1 {
       margin: 0;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    .hero-main p {
+      margin: 14px 0 20px;
+      max-width: 720px;
+      font-size: 14px;
+      line-height: 1.65;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hero-side {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .mini {
+      border: 1px solid var(--line);
+      background: #f8fbff;
+      border-radius: 12px;
+      padding: 11px;
+    }
+
+    .mini b {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: var(--ink);
+    }
+
+    .mini span {
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    .section {
+      padding: 10px 0 14px;
+    }
+
+    .section h2 {
+      margin: 0 0 12px;
+      font-size: 1.25rem;
+      letter-spacing: -0.2px;
+    }
+
+    .section-intro {
+      color: var(--muted);
+      margin: 0 0 14px;
       font-size: 14px;
       line-height: 1.6;
-      color: rgba(255, 255, 255, 0.88);
-      max-width: 760px;
     }
 
-    .content {
-      padding: 24px 24px 26px;
+    .view-grid {
       display: grid;
       gap: 14px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .card {
-      display: block;
-      text-decoration: none;
-      color: inherit;
+    .view-card {
       border: 1px solid var(--line);
-      border-radius: 12px;
-      background: #f9fbff;
+      border-radius: var(--radius);
+      background: #fff;
       padding: 18px;
-      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(15, 32, 56, 0.1);
-      border-color: #bbd0e8;
+      box-shadow: 0 8px 22px rgba(15, 32, 56, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .tag {
       display: inline-block;
+      width: fit-content;
       font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
       text-transform: uppercase;
       border-radius: 999px;
-      padding: 3px 9px;
-      margin-bottom: 9px;
+      padding: 4px 9px;
       color: #fff;
     }
 
-    .tag.dashboard { background: var(--teal); }
+    .tag.dashboard { background: var(--teal-2); }
     .tag.sim3d { background: var(--orange); }
 
-    .card h2 {
-      margin: 0 0 8px;
-      font-size: 1.1rem;
+    .view-card h3 {
+      margin: 0;
+      font-size: 1.08rem;
       letter-spacing: -0.2px;
     }
 
-    .card p {
+    .view-card p {
       margin: 0;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.58;
     }
 
-    .footer {
-      padding: 0 24px 20px;
+    .feature-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .feature {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f8fbff;
+      padding: 14px;
       color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .feature b {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    .flow {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f8fbff;
+      padding: 14px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 12px;
+      color: #355071;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .cmd-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .cmd {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f8fbff;
+      padding: 12px;
+    }
+
+    .cmd .k {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 800;
+      color: #2d486b;
+      margin-bottom: 7px;
+    }
+
+    .cmd code {
+      display: block;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+      color: #1d3656;
+      white-space: pre-wrap;
+      line-height: 1.55;
+    }
+
+    .footer {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding: 18px 0 34px;
+      color: var(--muted);
+      font-size: 12.5px;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr 1fr; }
     }
 
     @media (max-width: 760px) {
-      .content { grid-template-columns: 1fr; }
+      .topbar-row { min-height: 58px; }
+      .hero { padding-top: 26px; }
+      .hero-main { padding: 24px 18px; }
+      .view-grid { grid-template-columns: 1fr; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .cmd-grid { grid-template-columns: 1fr; }
+      .section h2 { font-size: 1.12rem; }
     }
   </style>
 </head>
 <body>
-  <main class="home">
-    <section class="hero">
-      <h1>AeroPath RL</h1>
-      <p>Autonomous drone navigation using reinforcement learning. Choose a view to inspect training metrics, evaluation performance, and 3D trajectory playback.</p>
+  <header class="topbar">
+    <div class="container topbar-row">
+      <div class="brand"><span class="brand-dot"></span>AeroPath RL</div>
+      <nav class="top-actions">
+        <a class="btn btn-ghost" href="/">Home</a>
+        <a class="btn btn-primary" href="/dashboard.html">Dashboard</a>
+        <a class="btn btn-accent" href="/simulation3d.html">3D View</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container hero-grid">
+      <article class="hero-main">
+        <span class="eyebrow">Autonomous Navigation Research</span>
+        <h1>Drone RL Training and Evaluation Hub</h1>
+        <p>
+          AeroPath RL trains a drone policy with PPO to navigate toward a goal while avoiding unsafe behavior.
+          Use the dashboard for model-performance analytics and the 3D player for episode-level trajectory replay.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="/dashboard.html">Open Dashboard</a>
+          <a class="btn btn-accent" href="/simulation3d.html">Open 3D Simulation</a>
+        </div>
+      </article>
+
+      <aside class="hero-side">
+        <div class="mini">
+          <b>Algorithm</b>
+          <span>PPO with MLP policy for continuous action control.</span>
+        </div>
+        <div class="mini">
+          <b>Environment</b>
+          <span>Local Gym-based drone environment with sensor-driven observations.</span>
+        </div>
+        <div class="mini">
+          <b>Outputs</b>
+          <span>Models, training logs, evaluation stats, and trajectory datasets.</span>
+        </div>
+        <div class="mini">
+          <b>Visualization</b>
+          <span>2D analytics dashboard + interactive 3D trajectory playback.</span>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <main class="container">
+    <section class="section">
+      <h2>Choose a View</h2>
+      <p class="section-intro">Both views read from your generated artifacts in <code>eval_results/</code> and <code>logs/</code>. Start with Dashboard for metrics, then switch to 3D playback for behavior inspection.</p>
+      <div class="view-grid">
+        <article class="view-card">
+          <span class="tag dashboard">Analytics</span>
+          <h3>Dashboard</h3>
+          <p>Inspect KPIs, reward and step curves, checkpoint progress, and system parameters from recent evaluation outputs.</p>
+          <a class="btn btn-primary" href="/dashboard.html">Go to Dashboard</a>
+        </article>
+
+        <article class="view-card">
+          <span class="tag sim3d">Simulation</span>
+          <h3>3D Trajectory Viewer</h3>
+          <p>Replay episodes in 3D, switch episodes, scrub per step, and view trajectory traces to understand policy movement patterns.</p>
+          <a class="btn btn-accent" href="/simulation3d.html">Go to 3D View</a>
+        </article>
+      </div>
     </section>
 
-    <section class="content">
-      <a class="card" href="/dashboard.html">
-        <span class="tag dashboard">Analytics</span>
-        <h2>Open Dashboard</h2>
-        <p>View KPIs, episode reward curves, checkpoint progress, and configuration panels.</p>
-      </a>
-
-      <a class="card" href="/simulation3d.html">
-        <span class="tag sim3d">Simulation</span>
-        <h2>Open 3D View</h2>
-        <p>Replay evaluation episodes in 3D with trajectory playback, episode selection, and step controls.</p>
-      </a>
+    <section class="section">
+      <h2>Core Capabilities</h2>
+      <div class="feature-grid">
+        <div class="feature">
+          <b>Policy Learning</b>
+          PPO learns continuous velocity outputs for goal-directed navigation.
+        </div>
+        <div class="feature">
+          <b>Safety Objectives</b>
+          Reward shaping encourages progress while penalizing collision and boundary violations.
+        </div>
+        <div class="feature">
+          <b>Evaluation Tooling</b>
+          Batch evaluation exports trajectories and summary statistics for post-analysis.
+        </div>
+      </div>
     </section>
 
-    <p class="footer">Tip: Deploy on Vercel and open the root URL to land on this home page.</p>
+    <section class="section">
+      <h2>System Flow</h2>
+      <div class="flow">main.py (CLI)
+  -> train | evaluate | info
+  -> DroneNavigationEnv (state + sensors)
+  -> PPO Policy (predict action vx, vy, vz)
+  -> RewardFunction + episode metrics
+  -> outputs: models/, logs/, eval_results/
+  -> visualized in dashboard.html and simulation3d.html</div>
+    </section>
+
+    <section class="section">
+      <h2>Quick Commands</h2>
+      <div class="cmd-grid">
+        <div class="cmd">
+          <div class="k">Train</div>
+          <code>python3 main.py train --timesteps 200000</code>
+        </div>
+        <div class="cmd">
+          <div class="k">Evaluate</div>
+          <code>python3 main.py evaluate --model models/saved_models/final_drone_ppo.zip --mode batch --n 100 --save --out_dir eval_results/</code>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Deploy on Vercel and open the root URL to land on this full homepage.
+    </footer>
   </main>
 </body>
 </html>

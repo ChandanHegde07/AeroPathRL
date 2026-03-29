@@ -21,6 +21,8 @@ def cmd_train(args: argparse.Namespace):
         TRAIN_CONFIG.total_timesteps = args.timesteps
     if args.n_envs:
         TRAIN_CONFIG.n_envs = args.n_envs
+    if args.difficulty:
+        ENV_CONFIG.difficulty_level = args.difficulty
 
     trainer = DroneTrainer(env_cfg=ENV_CONFIG, train_cfg=TRAIN_CONFIG)
     trainer.train(resume_from=args.resume)
@@ -29,6 +31,9 @@ def cmd_train(args: argparse.Namespace):
 def cmd_evaluate(args: argparse.Namespace):
     from agent.evaluate import DroneEvaluator
     from config.env_config import ENV_CONFIG
+
+    if args.difficulty:
+        ENV_CONFIG.difficulty_level = args.difficulty
 
     evaluator = DroneEvaluator(model_path=args.model, env_cfg=ENV_CONFIG)
 
@@ -46,6 +51,9 @@ def cmd_evaluate(args: argparse.Namespace):
 def cmd_demo(args: argparse.Namespace):
     from agent.evaluate import DroneEvaluator
     from config.env_config import ENV_CONFIG
+
+    if args.difficulty:
+        ENV_CONFIG.difficulty_level = args.difficulty
 
     evaluator = DroneEvaluator(model_path=args.model, env_cfg=ENV_CONFIG)
     console.print(
@@ -80,6 +88,8 @@ def cmd_info(_args: argparse.Namespace):
 
 
 def build_parser() -> argparse.ArgumentParser:
+    from config.env_config import DIFFICULTY_LEVELS
+
     parser = argparse.ArgumentParser(
         prog="drone_rl",
         description="Autonomous Drone Navigation using Reinforcement Learning",
@@ -94,6 +104,8 @@ def build_parser() -> argparse.ArgumentParser:
                          help="Override total training timesteps")
     p_train.add_argument("--n_envs",     type=int, default=None,
                          help="Override number of parallel environments")
+    p_train.add_argument("--difficulty", type=str, choices=DIFFICULTY_LEVELS, default=None,
+                         help="Set environment difficulty level")
 
     p_eval = sub.add_parser("evaluate", help="Evaluate a trained agent")
     p_eval.add_argument("--model",      required=True, help="Path to .zip model")
@@ -107,9 +119,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_eval.add_argument("--save",       action="store_true",
                         help="Save trajectory CSV and stats JSON")
     p_eval.add_argument("--out_dir",    default="eval_results/")
+    p_eval.add_argument("--difficulty", type=str, choices=DIFFICULTY_LEVELS, default=None,
+                        help="Set environment difficulty level")
 
     p_demo = sub.add_parser("demo", help="Run one rendered episode")
     p_demo.add_argument("--model", required=True, help="Path to .zip model")
+    p_demo.add_argument("--difficulty", type=str, choices=DIFFICULTY_LEVELS, default=None,
+                        help="Set environment difficulty level")
 
     sub.add_parser("info", help="Print current configuration")
 

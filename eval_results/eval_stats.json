@@ -1,11 +1,11 @@
 {
   "n_episodes": 100,
-  "success_rate": 1.0,
-  "collision_rate": 0.0,
-  "mean_reward": 335.88843389072133,
-  "std_reward": 0.4285828835196627,
-  "min_reward": 334.48547612260955,
-  "max_reward": 336.46628492985803,
-  "mean_steps": 57.01,
-  "mean_path_length": 31.733215403651947
+  "success_rate": 0.98,
+  "collision_rate": 0.02,
+  "mean_reward": 329.4130632049565,
+  "std_reward": 53.568289365336845,
+  "min_reward": -68.50431241772021,
+  "max_reward": 338.14964292193685,
+  "mean_steps": 60.43,
+  "mean_path_length": 31.627175098192374
 }

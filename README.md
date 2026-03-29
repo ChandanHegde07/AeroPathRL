@@ -95,6 +95,13 @@ python3 main.py info
 python3 main.py train --timesteps 200000
 ```
 
+Difficulty examples:
+
+```bash
+python3 main.py train --difficulty easy
+python3 main.py train --difficulty hard
+```
+
 ### Evaluate
 
 ```bash
@@ -127,7 +134,9 @@ Then open: `http://localhost:8000/dashboard.html`
 ## Main Commands
 
 - Train: `python3 main.py train`
+- Train with difficulty: `python3 main.py train --difficulty {easy|medium|hard}`
 - Resume training: `python3 main.py train --resume <model_path>`
 - Evaluate: `python3 main.py evaluate --model <model_path> --mode batch --n 20`
+- Evaluate with difficulty: `python3 main.py evaluate --model <model_path> --difficulty {easy|medium|hard}`
 - Single episode with live 2D simulation: `python3 main.py evaluate --model <model_path> --mode single --render2d`
 - Demo run: `python3 main.py demo --model <model_path>`
