@@ -1,9 +1,20 @@
 # AeroPath RL
 
-AeroPath RL is an autonomous drone navigation project using reinforcement learning.
-The agent is trained to fly from spawn to target in 3D space while avoiding collisions.
+[![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python)](https://www.python.org)
+[![Gymnasium](https://img.shields.io/badge/Gymnasium-0.29.1-blue?logo=gym)](https://gymnasium.farama.org)
+[![Stable-Baselines3](https://img.shields.io/badge/SB3-2.2.1-green?logo=stable-baselines3)](https://stable-baselines3.readthedocs.io)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-The project uses PPO with a local simulator backend for development and training.
+AeroPath RL is an autonomous drone navigation project using reinforcement learning. The agent is trained to fly from spawn to target in 3D space while avoiding collisions using PPO with a local simulator backend.
+
+## Why Reinforcement Learning?
+
+Traditional drone navigation relies on rule-based systems or path planning algorithms (A*, RRT) that require pre-defined maps and explicit obstacle modeling. Reinforcement learning offers:
+
+- **Adaptive Behavior**: The agent learns to handle dynamic, unknown environments without explicit programming
+- **End-to-End Learning**: Maps raw sensor observations directly to control actions
+- **Collision Avoidance**: Learns safe navigation through trial and error with reward shaping
+- **Generalization**: Can adapt to different drone configurations and environments
 
 ## What This Repo Includes
 
@@ -16,32 +27,32 @@ The project uses PPO with a local simulator backend for development and training
 
 The drone agent learns to:
 
-- start from spawn position
-- interpret state + distance sensor signals
-- take continuous control actions
-- reach the target safely and efficiently
+- Start from spawn position
+- Interpret state + distance sensor signals
+- Take continuous control actions
+- Reach the target safely and efficiently
 
 ## Quick Start
 
-1. Install dependencies:
+### Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Show current configuration:
+### Show Configuration
 
 ```bash
 python3 main.py info
 ```
 
-3. Train:
+### Train
 
 ```bash
 python3 main.py train --timesteps 200000
 ```
 
-4. Evaluate and save dashboard-ready data:
+### Evaluate
 
 ```bash
 python3 main.py evaluate \
@@ -54,9 +65,7 @@ python3 main.py evaluate \
 
 ## Dashboard
 
-Dashboard file:
-
-- `dashboard.html`
+Dashboard file: `dashboard.html`
 
 Dashboard reads data from:
 
@@ -70,22 +79,7 @@ Run locally:
 python3 -m http.server
 ```
 
-Then open:
-
-- `http://localhost:8000/dashboard.html`
-
-## Vercel Deployment (Static)
-
-This repository also contains Python code, so Vercel may auto-detect it as a Python app.
-To host only the dashboard as static content, keep/use `vercel.json` with static build routing.
-
-Important:
-
-- Commit dashboard data files so Vercel can serve them:
-  - `eval_results/eval_stats.json`
-  - `eval_results/trajectories.csv`
-  - any needed `logs/*.csv`
-- If these files are missing in deployment, graphs will be empty.
+Then open: `http://localhost:8000/dashboard.html`
 
 ## Main Commands
 
