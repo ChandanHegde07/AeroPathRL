@@ -404,6 +404,22 @@
       .result-grid { grid-template-columns: 1fr; }
       .section h2 { font-size: 1.12rem; }
     }
+
+    @media (max-width: 520px) {
+      .topbar-row {
+        padding: 10px 0;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .top-actions { width: 100%; }
+      .top-actions .btn {
+        flex: 1 1 calc(50% - 8px);
+        justify-content: center;
+      }
+      .hero-main p { font-size: 13px; }
+      .metric-grid { grid-template-columns: 1fr; }
+      .section-intro { font-size: 13px; }
+    }
   </style>
 </head>
 <body>
