@@ -548,6 +548,7 @@
         </div>
       </div>
       <div class="chart-box" id="step-reward-chart"></div>
+      <p class="note" id="episode-meta">Select an episode to inspect per-step reward and trajectory.</p>
     </article>
 
     <article class="card">
@@ -661,7 +662,16 @@ function groupByEp(rows) {
 }
 
 /* ─── SVG CHART ENGINE ─── */
-function buildSVG({ W = 700, H = 230, lines = [], pts = [], xLbl = "", animate = false } = {}) {
+function buildSVG({
+  W = 700,
+  H = 230,
+  lines = [],
+  pts = [],
+  xLbl = "",
+  animate = false,
+  xDomain = null,
+  yDomain = null,
+} = {}) {
   const P = { l: 52, r: 20, t: 18, b: 34 };
   const w = W - P.l - P.r, h = H - P.t - P.b;
 
@@ -672,8 +682,8 @@ function buildSVG({ W = 700, H = 230, lines = [], pts = [], xLbl = "", animate =
       font-family="'Plus Jakarta Sans',sans-serif">No data available</text></svg>`;
 
   const xs = all.map(p => p.x), ys = all.map(p => p.y);
-  const [x0, x1] = [Math.min(...xs), Math.max(...xs)];
-  const [y0, y1] = [Math.min(...ys), Math.max(...ys)];
+  const [x0, x1] = xDomain ?? [Math.min(...xs), Math.max(...xs)];
+  const [y0, y1] = yDomain ?? [Math.min(...ys), Math.max(...ys)];
   const sx = x => P.l + ((x - x0) / (x1 - x0 || 1)) * w;
   const sy = y => P.t + h - ((y - y0) / (y1 - y0 || 1)) * h;
   const fmt = v => Math.abs(v) >= 10000 ? (v/1000).toFixed(1)+'k' : v.toFixed(v%1===0?0:1);
@@ -765,14 +775,53 @@ function renderEpCharts(eps) {
 function renderEpSelect(eps) {
   const sel = document.getElementById("episode-select");
   sel.innerHTML = eps.map(e => `<option value="${e.ep}">Episode ${e.ep}</option>`).join("");
+  const meta = document.getElementById("episode-meta");
+
+  const allRewards = eps.flatMap(e => e.s.map(r => +r.reward)).filter(v => isFinite(v));
+  const allX = eps.flatMap(e => e.s.map(r => +r.x)).concat([TARGET.x, SPAWN.x]).filter(v => isFinite(v));
+  const allZ = eps.flatMap(e => e.s.map(r => +r.z)).concat([TARGET.z, SPAWN.z]).filter(v => isFinite(v));
+
+  const pad = (lo, hi, p = 0.08) => {
+    const span = (hi - lo) || 1;
+    return [lo - span * p, hi + span * p];
+  };
+
+  const [rewardMin, rewardMax] = pad(Math.min(...allRewards), Math.max(...allRewards), 0.08);
+  const [trajXMin, trajXMax] = pad(Math.min(...allX), Math.max(...allX), 0.06);
+  const [trajZMin, trajZMax] = pad(Math.min(...allZ), Math.max(...allZ), 0.06);
 
   const draw = () => {
     const e = eps.find(e => e.ep === +sel.value);
     if (!e) return;
     const rwd  = e.s.map(r => ({ x: +r.step, y: +r.reward }));
     const traj = e.s.map(r => ({ x: +r.x, y: +r.z }));
-    document.getElementById("step-reward-chart").innerHTML  = buildSVG({ lines: [{ d: rwd, c: "#006d77", fill: true }], xLbl: "Step", animate: true });
-    document.getElementById("trajectory-chart").innerHTML   = buildSVG({ lines: [{ d: traj, c: "#006d77", w: 2 }], pts: [{ x: TARGET.x, y: TARGET.z, c: "#1a7a4a" }, { x: SPAWN.x, y: SPAWN.z, c: "#c1121f" }], xLbl: "X (m)", animate: true });
+
+    let pathLen = 0;
+    for (let i = 1; i < traj.length; i++) {
+      const dx = traj[i].x - traj[i - 1].x;
+      const dz = traj[i].y - traj[i - 1].y;
+      pathLen += Math.hypot(dx, dz);
+    }
+    const epReturn = rwd.reduce((a, p) => a + p.y, 0);
+
+    document.getElementById("step-reward-chart").innerHTML = buildSVG({
+      lines: [{ d: rwd, c: "#006d77", fill: true }],
+      xLbl: "Step",
+      yDomain: [rewardMin, rewardMax],
+      animate: true,
+    });
+    document.getElementById("trajectory-chart").innerHTML = buildSVG({
+      lines: [{ d: traj, c: "#006d77", w: 2 }],
+      pts: [
+        { x: TARGET.x, y: TARGET.z, c: "#1a7a4a" },
+        { x: SPAWN.x, y: SPAWN.z, c: "#c1121f" },
+      ],
+      xLbl: "X (m)",
+      xDomain: [trajXMin, trajXMax],
+      yDomain: [trajZMin, trajZMax],
+      animate: true,
+    });
+    meta.textContent = `Episode ${e.ep} · steps ${rwd.length} · return ${epReturn.toFixed(2)} · path ${pathLen.toFixed(2)} m`;
   };
   sel.addEventListener("change", draw);
   draw();
