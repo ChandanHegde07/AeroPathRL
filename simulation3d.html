@@ -1,468 +1,1189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AeroPath RL - 3D Simulation</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AeroPath RL — Flight Operations</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --bg: #0b1220;
-      --panel: #121b2e;
-      --panel-2: #18243b;
-      --line: #263958;
-      --text: #e6edf7;
-      --muted: #9fb0c9;
-      --accent: #00b4d8;
-      --ok: #2ec27e;
-      --warn: #ff7b54;
+      /* ── Palette: Black / White / Red / Orange ── */
+      --bg:         #0a0a0a;
+      --bg2:        #111111;
+      --bg3:        #1a1a1a;
+      --panel:      rgba(15,15,15,0.92);
+      --border:     rgba(255,255,255,0.10);
+      --border-hi:  rgba(255,80,0,0.55);
+
+      --white:      #ffffff;
+      --white-dim:  rgba(255,255,255,0.75);
+      --white-faint:rgba(255,255,255,0.12);
+
+      --red:        #e8001c;
+      --red-dim:    rgba(232,0,28,0.15);
+      --red-hi:     #ff2240;
+
+      --orange:     #ff5000;
+      --orange-dim: rgba(255,80,0,0.15);
+      --orange-hi:  #ff7330;
+      --orange-glow:0 0 18px rgba(255,80,0,0.45);
+
+      --muted:      rgba(255,255,255,0.38);
+      --text:       rgba(255,255,255,0.88);
+      --text-hi:    #ffffff;
+
+      --font:       'Poppins', sans-serif;
     }
 
-    * { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+
     body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: radial-gradient(circle at 15% 10%, #12233f 0%, var(--bg) 45%);
+      font-family: var(--font);
+      background: var(--bg);
       color: var(--text);
       display: grid;
-      grid-template-rows: auto 1fr;
-      min-height: 100dvh;
+      grid-template-rows: 58px 1fr;
+      height: 100dvh;
     }
 
+    /* ── Scanline ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ══════════════════════════════
+       TOOLBAR
+    ══════════════════════════════ */
     .toolbar {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(120px, 1fr));
-      gap: 10px;
-      padding: 12px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(11, 18, 32, 0.85);
-      backdrop-filter: blur(6px);
-    }
-
-    .control {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      background: #0d0d0d;
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
 
-    .control label {
-      font-size: 12px;
-      color: var(--muted);
+    .toolbar::-webkit-scrollbar { display: none; }
+
+    /* Brand */
+    .tb-brand {
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--white);
+      white-space: nowrap;
+      margin-right: 4px;
+      text-transform: uppercase;
     }
 
-    select, button, input[type="range"] {
-      border: 1px solid var(--line);
-      background: var(--panel);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 8px;
-      font-size: 13px;
-      width: 100%;
+    .tb-brand .accent {
+      color: var(--orange);
+      text-shadow: var(--orange-glow);
     }
 
-    button {
-      cursor: pointer;
+    /* Separator */
+    .tb-sep {
+      width: 1px;
+      height: 28px;
+      background: var(--border);
+      flex-shrink: 0;
+      margin: 0 2px;
+    }
+
+    /* Group */
+    .tb-group {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .tb-label {
+      font-family: var(--font);
+      font-size: 10px;
       font-weight: 600;
-      background: linear-gradient(135deg, #123056, #154274);
-    }
-
-    button:hover { filter: brightness(1.08); }
-
-    .status {
-      background: var(--panel-2);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 8px;
-      font-size: 12px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
       color: var(--muted);
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
+    /* Select */
+    select {
+      background: var(--bg3);
+      border: 1px solid var(--border-hi);
+      border-radius: 6px;
+      color: var(--orange);
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 10px;
+      cursor: pointer;
+      outline: none;
+      min-width: 110px;
+      transition: box-shadow 0.15s;
+    }
+
+    select:focus { box-shadow: 0 0 0 2px rgba(255,80,0,0.3); }
+
+    /* Buttons */
+    .tb-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 13px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: var(--white-faint);
+      color: var(--white);
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .tb-btn:hover {
+      background: rgba(255,255,255,0.18);
+      border-color: rgba(255,255,255,0.3);
+      box-shadow: 0 0 12px rgba(255,255,255,0.08);
+    }
+
+    .tb-btn:active { transform: scale(0.97); }
+
+    .tb-btn.primary {
+      background: var(--orange-dim);
+      border-color: var(--border-hi);
+      color: var(--orange-hi);
+    }
+
+    .tb-btn.primary:hover {
+      background: rgba(255,80,0,0.28);
+      box-shadow: var(--orange-glow);
+    }
+
+    .tb-btn.danger {
+      background: var(--red-dim);
+      border-color: rgba(232,0,28,0.5);
+      color: var(--red-hi);
+    }
+
+    .tb-btn.playing {
+      background: rgba(232,0,28,0.2);
+      border-color: rgba(232,0,28,0.6);
+      color: var(--red-hi);
+    }
+
+    .tb-btn svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+    /* Range sliders */
+    input[type="range"] {
+      -webkit-appearance: none;
+         appearance: none;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.15);
+      outline: none;
+      cursor: pointer;
+      min-width: 80px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--orange);
+      box-shadow: 0 0 8px rgba(255,80,0,0.7);
+      cursor: pointer;
+    }
+
+    .tb-speed-val {
+      font-family: var(--font);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--orange);
+      min-width: 30px;
+    }
+
+    .tb-spacer { flex: 1; min-width: 8px; }
+
+    /* Status pill */
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      font-family: var(--font);
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--white-dim);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #00e676;
+      box-shadow: 0 0 7px #00e676;
+      flex-shrink: 0;
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    .status-dot.loading { background: var(--orange); box-shadow: 0 0 7px var(--orange); }
+    .status-dot.error   { background: var(--red);    box-shadow: 0 0 7px var(--red); animation: none; }
+
+    /* ══════════════════════════════
+       CANVAS
+    ══════════════════════════════ */
     #canvas-wrap {
       position: relative;
-      width: 100%;
-      height: 100%;
-      min-height: 360px;
+      width: 100%; height: 100%;
+      overflow: hidden;
     }
 
-    #hint {
+    #canvas-wrap canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* ══════════════════════════════
+       HUD BASE
+    ══════════════════════════════ */
+    .hud {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 2;
-      font-size: 12px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .hud-panel {
+      background: rgba(10,10,10,0.82);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+      backdrop-filter: blur(10px);
+    }
+
+    /* ── Telemetry (top-left) ── */
+    .hud-telem {
+      top: 16px; left: 16px;
+      min-width: 220px;
+    }
+
+    .hud-section-title {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-section-title::before {
+      content: '';
+      display: inline-block;
+      width: 3px; height: 12px;
+      background: var(--orange);
+      border-radius: 2px;
+      box-shadow: 0 0 6px var(--orange);
+    }
+
+    .hud-row {
+      display: grid;
+      grid-template-columns: 85px 1fr;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .hud-row:last-of-type { border-bottom: none; }
+
+    .hud-key {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
       color: var(--muted);
-      background: rgba(10, 14, 24, 0.65);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 6px 8px;
+      text-transform: uppercase;
     }
 
-    @media (max-width: 980px) {
-      .toolbar { grid-template-columns: repeat(2, minmax(120px, 1fr)); }
+    .hud-val {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--white);
+      text-align: right;
     }
 
-    @media (max-width: 640px) {
-      .toolbar {
-        grid-template-columns: 1fr;
-        gap: 8px;
-        padding: 10px;
-      }
-      .control label { font-size: 11px; }
-      select, button, input[type="range"] { font-size: 12px; }
-      .status {
-        white-space: normal;
-        overflow: visible;
-      }
-      #hint {
-        left: 8px;
-        right: 8px;
-        font-size: 11px;
-      }
-      #canvas-wrap { min-height: 58dvh; }
+    .hud-val.orange { color: var(--orange-hi); }
+    .hud-val.red    { color: var(--red-hi); }
+    .hud-val.green  { color: #4cff8a; }
+    .hud-val.white  { color: var(--white); }
+
+    /* Progress bar */
+    .hud-bar-wrap {
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .hud-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--red), var(--orange));
+      border-radius: 2px;
+      transition: width 0.05s linear;
+      box-shadow: 0 0 6px rgba(255,80,0,0.5);
+    }
+
+    .hud-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Episode number (top-right) ── */
+    .hud-ep {
+      top: 16px; right: 16px;
+      text-align: right;
+    }
+
+    .hud-ep-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .hud-ep-num {
+      font-size: 36px;
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+
+    .hud-ep-num .ep-accent {
+      color: var(--orange);
+      text-shadow: var(--orange-glow);
+    }
+
+    /* ── Legend (bottom-left) ── */
+    .hud-legend {
+      bottom: 16px; left: 16px;
+    }
+
+    .leg-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--white-dim);
+      margin-bottom: 5px;
+    }
+
+    .leg-item:last-child { margin-bottom: 0; }
+
+    .leg-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .leg-line {
+      width: 24px; height: 3px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Controls hint (bottom-right) ── */
+    .hud-hint {
+      bottom: 16px; right: 16px;
+      text-align: right;
+    }
+
+    .hud-hint-title {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 6px;
+    }
+
+    .hud-hint p {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--white-dim);
+      line-height: 1.9;
+    }
+
+    .hud-hint .key {
+      display: inline-block;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--white);
+      margin-right: 3px;
+    }
+
+    /* ══════════════════════════════
+       ANIMATIONS
+    ══════════════════════════════ */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    #canvas-wrap { animation: fadeIn 0.5s ease; }
+
+    /* ══════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════ */
+    @media (max-width: 860px) {
+      .tb-label { display: none; }
+      .hud-telem { min-width: 180px; }
+      .hud-ep-num { font-size: 26px; }
+    }
+
+    @media (max-width: 600px) {
+      .toolbar { padding: 0 8px; gap: 5px; }
+      .hud-telem, .hud-legend { display: none; }
+      .hud-hint p { font-size: 9px; }
+      select { min-width: 88px; }
     }
   </style>
 </head>
 <body>
-  <div class="toolbar">
-    <div class="control">
-      <label for="episode-select">Episode</label>
-      <select id="episode-select"></select>
+
+<!-- ══ TOOLBAR ══ -->
+<div class="toolbar">
+
+  <div class="tb-brand">AERO<span class="accent">PATH</span></div>
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <span class="tb-label">Episode</span>
+    <select id="episode-select"></select>
+  </div>
+
+  <div class="tb-sep"></div>
+
+  <button class="tb-btn primary" id="play-btn">
+    <svg id="play-icon" viewBox="0 0 12 12" fill="currentColor">
+      <polygon points="2,1 11,6 2,11"/>
+    </svg>
+    <span id="play-label">PLAY</span>
+  </button>
+
+  <button class="tb-btn danger" id="reset-btn">
+    <svg viewBox="0 0 12 12" fill="currentColor">
+      <path d="M6 2a4 4 0 1 0 3.46 2H8.27A2.75 2.75 0 1 1 6 3.25V2z"/>
+      <polygon points="4,0 8,2 4,4"/>
+    </svg>
+    RESET
+  </button>
+
+  <div class="tb-sep"></div>
+
+  <div class="tb-group">
+    <span class="tb-label">Step</span>
+    <input id="step-slider" type="range" min="0" max="1" value="0" style="width:100px"/>
+  </div>
+
+  <div class="tb-group">
+    <span class="tb-label">Speed</span>
+    <input id="speed-slider" type="range" min="0.25" max="6" value="1" step="0.25" style="width:70px"/>
+    <span class="tb-speed-val" id="speed-val">1×</span>
+  </div>
+
+  <div class="tb-sep"></div>
+
+  <button class="tb-btn" id="trail-btn">TRAIL ON</button>
+  <button class="tb-btn" id="ghost-btn">GHOST PATH</button>
+
+  <div class="tb-spacer"></div>
+
+  <div class="status-pill">
+    <span class="status-dot loading" id="status-dot"></span>
+    <span id="status-text">Initialising…</span>
+  </div>
+
+</div>
+
+<!-- ══ 3D CANVAS ══ -->
+<div id="canvas-wrap">
+
+  <!-- Telemetry HUD — top left -->
+  <div class="hud hud-telem hud-panel">
+    <div class="hud-section-title">Telemetry</div>
+
+    <div class="hud-row">
+      <span class="hud-key">Position X</span>
+      <span class="hud-val orange" id="t-x">—</span>
     </div>
-    <div class="control">
-      <label>Playback</label>
-      <button id="play-btn">Play Trajectory</button>
+    <div class="hud-row">
+      <span class="hud-key">Position Y</span>
+      <span class="hud-val orange" id="t-y">—</span>
     </div>
-    <div class="control">
-      <label for="step-slider">Step</label>
-      <input id="step-slider" type="range" min="0" max="1" value="0" />
+    <div class="hud-row">
+      <span class="hud-key">Altitude</span>
+      <span class="hud-val orange" id="t-z">—</span>
     </div>
-    <div class="control">
-      <label for="speed-slider">Speed</label>
-      <input id="speed-slider" type="range" min="0.25" max="4" value="1" step="0.25" />
+    <div class="hud-row">
+      <span class="hud-key">Step Reward</span>
+      <span class="hud-val white" id="t-reward">—</span>
     </div>
-    <div class="control">
-      <label>Reset</label>
-      <button id="reset-btn">Reset Episode</button>
+    <div class="hud-row">
+      <span class="hud-key">Total Reward</span>
+      <span class="hud-val green" id="t-cumreward">—</span>
     </div>
-    <div class="control">
-      <label>Info</label>
-      <div id="status" class="status">Loading trajectories...</div>
+    <div class="hud-row">
+      <span class="hud-key">Dist. Target</span>
+      <span class="hud-val orange" id="t-dist">—</span>
+    </div>
+
+    <div class="hud-bar-wrap">
+      <div class="hud-bar" id="t-prog" style="width:0%"></div>
+    </div>
+    <div class="hud-bar-label">
+      <span id="t-step">Step 0</span>
+      <span id="t-total">/ 0</span>
     </div>
   </div>
 
-  <div id="canvas-wrap">
-    <div id="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
+  <!-- Episode — top right -->
+  <div class="hud hud-ep hud-panel">
+    <div class="hud-ep-label">Episode</div>
+    <div class="hud-ep-num" id="hud-ep-num">—</div>
   </div>
 
-  <script type="module">
-    const TARGET = { x: 30, y: 0, z: -10 };
-    const SPAWN = { x: 0, y: 0, z: -5 };
-    const BOUNDS = { x: 60, y: 60, z: 30 };
+  <!-- Legend — bottom left -->
+  <div class="hud hud-legend hud-panel">
+    <div class="hud-section-title">Legend</div>
+    <div class="leg-item">
+      <span class="leg-dot" style="background:#e8001c;box-shadow:0 0 7px #e8001c"></span>
+      Spawn Point
+    </div>
+    <div class="leg-item">
+      <span class="leg-dot" style="background:#ff5000;box-shadow:0 0 9px #ff5000"></span>
+      Target Beacon
+    </div>
+    <div class="leg-item">
+      <span class="leg-dot" style="background:#ffffff;box-shadow:0 0 7px rgba(255,255,255,0.5)"></span>
+      Drone Agent
+    </div>
+    <div class="leg-item">
+      <span class="leg-line" style="background:linear-gradient(90deg,#ffffff,#ff5000)"></span>
+      Trail Path
+    </div>
+    <div class="leg-item">
+      <span class="leg-line" style="background:rgba(255,255,255,0.25)"></span>
+      Ghost Path
+    </div>
+    <div class="leg-item">
+      <span class="leg-dot" style="background:#e8001c;opacity:0.8"></span>
+      Obstacle
+    </div>
+  </div>
 
-    const episodeSelect = document.getElementById("episode-select");
-    const playBtn = document.getElementById("play-btn");
-    const resetBtn = document.getElementById("reset-btn");
-    const stepSlider = document.getElementById("step-slider");
-    const speedSlider = document.getElementById("speed-slider");
-    const statusEl = document.getElementById("status");
-    const wrap = document.getElementById("canvas-wrap");
-    let THREE = null;
-    let OrbitControls = null;
+  <!-- Controls hint — bottom right -->
+  <div class="hud hud-hint hud-panel">
+    <div class="hud-hint-title">Controls</div>
+    <p><span class="key">Drag</span> Orbit Camera</p>
+    <p><span class="key">Scroll</span> Zoom In/Out</p>
+    <p><span class="key">R-Drag</span> Pan View</p>
+    <p><span class="key">Space</span> Play / Pause</p>
+    <p><span class="key">R</span> Reset Episode</p>
+    <p><span class="key">← →</span> Step Frame</p>
+  </div>
 
-    let episodes = [];
-    let currentEpisode = null;
-    let currentStep = 0;
-    let playing = false;
-    let speed = 1;
+</div>
 
-    async function importWithFallback(urls) {
-      let lastErr = null;
-      for (const url of urls) {
-        try {
-          return await import(url);
-        } catch (e) {
-          lastErr = e;
-        }
-      }
-      throw lastErr || new Error("Import failed");
-    }
+<!-- ══ THREE.JS ══ -->
+<script type="module">
+/* ─── CONFIG ─── */
+const TARGET_NED = { x: 30, y: 0, z: -10 };
+const SPAWN_NED  = { x: 0,  y: 0, z: -5  };
+const OBSTACLE_POSITIONS = [
+  { x: 10, y: 1,   z: -8  },
+  { x: 18, y: -1,  z: -9  },
+  { x: 24, y: 0.5, z: -11 },
+  { x: 14, y: -2,  z: -7  },
+  { x: 8,  y: 2,   z: -10 },
+];
 
-    async function loadThree() {
-      const threeMod = await importWithFallback([
-        "https://esm.sh/three@0.161.0",
-        "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
-        "https://unpkg.com/three@0.161.0/build/three.module.js?module",
-      ]);
-      THREE = threeMod;
+/* ─── UI ─── */
+const $ = id => document.getElementById(id);
+const epSel       = $('episode-select');
+const playBtn     = $('play-btn');
+const playLabel   = $('play-label');
+const playIcon    = $('play-icon');
+const resetBtn    = $('reset-btn');
+const stepSlider  = $('step-slider');
+const speedSlider = $('speed-slider');
+const speedVal    = $('speed-val');
+const trailBtn    = $('trail-btn');
+const ghostBtn    = $('ghost-btn');
+const statusDot   = $('status-dot');
+const statusText  = $('status-text');
+const wrap        = $('canvas-wrap');
 
-      const orbitMod = await importWithFallback([
-        "https://esm.sh/three@0.161.0/examples/jsm/controls/OrbitControls.js",
-        "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/OrbitControls.js",
-        "https://unpkg.com/three@0.161.0/examples/jsm/controls/OrbitControls.js?module",
-      ]);
-      OrbitControls = orbitMod.OrbitControls;
-    }
+/* ─── STATE ─── */
+let episodes = [], currentEp = null, currentStep = 0;
+let playing = false, speed = 1;
+let showTrail = true, showGhost = true;
+let THREE, OrbitControls;
+let scene, camera, renderer, controls;
+let droneObj, droneGlow, droneRing;
+let targetBeacon, targetRing1, targetRing2;
+let fullPathLine = null, trailLine = null;
+let obstacleObjs = [];
+let stars;
+let lastTime = performance.now(), accum = 0;
+let cumReward = 0;
 
-    await loadThree();
+/* ─── LOAD THREE ─── */
+async function importFallback(urls) {
+  for (const u of urls) {
+    try { return await import(u); } catch {}
+  }
+  throw new Error('Failed to load Three.js');
+}
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a1220);
+async function loadThree() {
+  const tm = await importFallback([
+    'https://esm.sh/three@0.161.0',
+    'https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js',
+    'https://unpkg.com/three@0.161.0/build/three.module.js?module',
+  ]);
+  THREE = tm;
+  const om = await importFallback([
+    'https://esm.sh/three@0.161.0/examples/jsm/controls/OrbitControls.js',
+    'https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/controls/OrbitControls.js',
+  ]);
+  OrbitControls = om.OrbitControls;
+}
 
-    const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 1000);
-    camera.position.set(22, 18, 30);
+/* ─── COORDS: NED → Three.js ─── */
+function ned2three(x, y, z) {
+  return new THREE.Vector3(+x, -(+z), +y);
+}
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    wrap.appendChild(renderer.domElement);
+/* ─── SCENE ─── */
+function buildScene() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x080808);
+  scene.fog = new THREE.FogExp2(0x080808, 0.010);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.target.set(15, 8, 0);
+  camera = new THREE.PerspectiveCamera(55, 1, 0.1, 800);
+  camera.position.set(24, 20, 34);
 
-    const ambient = new THREE.AmbientLight(0xffffff, 0.58);
-    scene.add(ambient);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  wrap.appendChild(renderer.domElement);
 
-    const dir = new THREE.DirectionalLight(0xffffff, 0.8);
-    dir.position.set(20, 30, 12);
-    scene.add(dir);
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.07;
+  controls.target.set(15, 5, 0);
+  controls.minDistance = 4;
+  controls.maxDistance = 200;
 
-    const grid = new THREE.GridHelper(150, 30, 0x2a3b57, 0x1a2940);
-    grid.position.y = -0.01;
-    scene.add(grid);
+  /* Lights */
+  scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+  const sun = new THREE.DirectionalLight(0xfff4e8, 1.0);
+  sun.position.set(25, 40, 15);
+  sun.castShadow = true;
+  scene.add(sun);
+  // Orange fill light near path centre
+  const orangeFill = new THREE.PointLight(0xff5000, 0.7, 70);
+  orangeFill.position.set(15, 8, 0);
+  scene.add(orangeFill);
+  // Red accent near spawn
+  const redFill = new THREE.PointLight(0xe8001c, 0.5, 40);
+  redFill.position.set(0, 5, 0);
+  scene.add(redFill);
 
-    const boundsGeom = new THREE.BoxGeometry(BOUNDS.x * 2, BOUNDS.y * 2, BOUNDS.z * 2);
-    const boundsMat = new THREE.MeshBasicMaterial({
-      color: 0x2a9d8f,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.12,
+  buildStars();
+  buildGround();
+
+  /* Bounding box — white wireframe */
+  const bbMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(120, 60, 120),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true, transparent: true, opacity: 0.03 })
+  );
+  scene.add(bbMesh);
+
+  buildSpawn();
+  buildTarget();
+  buildDrone();
+  buildObstacles();
+}
+
+function buildStars() {
+  const verts = [];
+  for (let i = 0; i < 2000; i++) {
+    verts.push(
+      (Math.random() - 0.5) * 800,
+      Math.random() * 400 + 20,
+      (Math.random() - 0.5) * 800
+    );
+  }
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  stars = new THREE.Points(geom, new THREE.PointsMaterial({
+    color: 0xffffff, size: 0.35, transparent: true, opacity: 0.45
+  }));
+  scene.add(stars);
+}
+
+function buildGround() {
+  // Grid — subtle white lines
+  const grid = new THREE.GridHelper(200, 50, 0x1f1f1f, 0x141414);
+  grid.position.y = -0.1;
+  scene.add(grid);
+
+  // Ground plane
+  const gp = new THREE.Mesh(
+    new THREE.PlaneGeometry(200, 200),
+    new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 1 })
+  );
+  gp.rotation.x = -Math.PI / 2;
+  gp.position.y = -0.15;
+  gp.receiveShadow = true;
+  scene.add(gp);
+}
+
+function buildSpawn() {
+  const pos = ned2three(SPAWN_NED.x, SPAWN_NED.y, SPAWN_NED.z);
+  const sp = makeSphere(0.55, 0xe8001c, 0.7, pos);
+  scene.add(sp);
+  scene.add(makeGlowSprite(pos, 0xe8001c, 2.5));
+}
+
+function buildTarget() {
+  const pos = ned2three(TARGET_NED.x, TARGET_NED.y, TARGET_NED.z);
+
+  targetBeacon = makeSphere(0.75, 0xff5000, 0.8, pos);
+  scene.add(targetBeacon);
+  scene.add(makeGlowSprite(pos, 0xff5000, 4.5));
+
+  // Rings
+  const rm1 = new THREE.MeshBasicMaterial({ color: 0xff5000, transparent: true, opacity: 0.4, side: THREE.DoubleSide });
+  const rm2 = new THREE.MeshBasicMaterial({ color: 0xff5000, transparent: true, opacity: 0.18, side: THREE.DoubleSide });
+  targetRing1 = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.65, 32), rm1);
+  targetRing2 = new THREE.Mesh(new THREE.RingGeometry(2.1, 2.55, 32), rm2);
+  [targetRing1, targetRing2].forEach(r => {
+    r.position.copy(pos);
+    r.rotation.x = -Math.PI / 2;
+    scene.add(r);
+  });
+
+  // Vertical beacon beam
+  const beamH = Math.max(pos.y, 2);
+  const beam = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.04, beamH, 8),
+    new THREE.MeshBasicMaterial({ color: 0xff5000, transparent: true, opacity: 0.22 })
+  );
+  beam.position.set(pos.x, beamH / 2, pos.z);
+  scene.add(beam);
+}
+
+function buildDrone() {
+  const pos = ned2three(SPAWN_NED.x, SPAWN_NED.y, SPAWN_NED.z);
+
+  // Core — white drone
+  droneObj = makeSphere(0.5, 0xffffff, 0.6, pos);
+  droneObj.castShadow = true;
+  scene.add(droneObj);
+
+  // Glow
+  droneGlow = makeGlowSprite(pos, 0xffffff, 3.5);
+  scene.add(droneGlow);
+
+  // Ring
+  droneRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.8, 1.1, 32),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+  );
+  droneRing.position.copy(pos);
+  droneRing.rotation.x = -Math.PI / 2;
+  scene.add(droneRing);
+}
+
+function buildObstacles() {
+  obstacleObjs.forEach(o => scene.remove(o));
+  obstacleObjs = [];
+  OBSTACLE_POSITIONS.forEach((p, idx) => {
+    const pos = ned2three(p.x, p.y, p.z);
+    const r = 1.1 + (idx % 3) * 0.4;
+
+    // Core — red sphere
+    const sphere = makeSphere(r, 0xe8001c, 0.6, pos);
+    scene.add(sphere);
+
+    // Wireframe shell — orange
+    const shell = new THREE.Mesh(
+      new THREE.SphereGeometry(r * 1.3, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0xff5000, wireframe: true, transparent: true, opacity: 0.18 })
+    );
+    shell.position.copy(pos);
+    scene.add(shell);
+
+    scene.add(makeGlowSprite(pos, 0xe8001c, r * 2.2));
+    obstacleObjs.push(sphere, shell);
+  });
+}
+
+/* ─── HELPERS ─── */
+function makeSphere(r, color, emissiveStr, pos) {
+  const m = new THREE.Mesh(
+    new THREE.SphereGeometry(r, 24, 24),
+    new THREE.MeshStandardMaterial({
+      color, emissive: color,
+      emissiveIntensity: emissiveStr * 0.4,
+      roughness: 0.35, metalness: 0.15
+    })
+  );
+  if (pos) m.position.copy(pos);
+  return m;
+}
+
+function makeGlowSprite(pos, color, scale) {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 128;
+  const ctx = canvas.getContext('2d');
+  const hex = '#' + color.toString(16).padStart(6, '0');
+  const grd = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grd.addColorStop(0,   hex + 'bb');
+  grd.addColorStop(0.4, hex + '44');
+  grd.addColorStop(1,   hex + '00');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, 0, 128, 128);
+  const tex = new THREE.CanvasTexture(canvas);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: tex, transparent: true,
+    depthWrite: false, blending: THREE.AdditiveBlending
+  }));
+  s.scale.set(scale, scale, 1);
+  if (pos) s.position.copy(pos);
+  return s;
+}
+
+function makeLine(points, color, opacity) {
+  const geom = new THREE.BufferGeometry().setFromPoints(points);
+  const mat  = new THREE.LineBasicMaterial({ color, transparent: true, opacity, linewidth: 2 });
+  return new THREE.Line(geom, mat);
+}
+
+/* Gradient trail: white → orange */
+function makeGradientTrail(points) {
+  const group = new THREE.Group();
+  const n = points.length;
+  for (let i = 0; i < n - 1; i++) {
+    const t = i / Math.max(n - 2, 1);
+    // Interpolate white (255,255,255) → orange (255,80,0)
+    const gr = 255;
+    const gg = Math.round(255 * (1 - t));
+    const gb = Math.round(255 * (1 - t));
+    const color = (gr << 16) | (gg << 8) | gb;
+    const seg = makeLine([points[i], points[i + 1]], color, 0.75 + t * 0.25);
+    group.add(seg);
+  }
+  return group;
+}
+
+/* ─── DATA ─── */
+function parseCSV(txt) {
+  const lines = txt.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const hdrs = lines[0].split(',').map(h => h.trim());
+  return lines.slice(1).filter(Boolean).map(line => {
+    const cols = line.split(','), row = {};
+    hdrs.forEach((h, i) => {
+      const v = (cols[i] ?? '').trim(), n = Number(v);
+      row[h] = v !== '' && isFinite(n) ? n : v;
     });
-    const boundsBox = new THREE.Mesh(boundsGeom, boundsMat);
-    boundsBox.position.set(0, 0, 0);
-    scene.add(boundsBox);
+    return row;
+  });
+}
 
-    const spawn = new THREE.Mesh(
-      new THREE.SphereGeometry(0.55, 18, 18),
-      new THREE.MeshStandardMaterial({ color: 0xc1121f, emissive: 0x3b0a0f, roughness: 0.45 })
-    );
-    function worldPoint(x, y, z) {
-      // Convert NED-like logs (z down) to Three.js world (y up)
-      return new THREE.Vector3(+x, -(+z), +y);
-    }
+function buildEpisodes(rows) {
+  const m = new Map();
+  rows.forEach(r => { if (!m.has(r.episode)) m.set(r.episode, []); m.get(r.episode).push(r); });
+  return [...m.entries()].sort((a, b) => a[0] - b[0])
+    .map(([ep, steps]) => ({ ep, steps: steps.sort((a, b) => a.step - b.step) }));
+}
 
-    const spawnPos = worldPoint(SPAWN.x, SPAWN.y, SPAWN.z);
-    const targetPos = worldPoint(TARGET.x, TARGET.y, TARGET.z);
+function epPoints(ep) {
+  return ep.steps.map(s => ned2three(s.x, s.y, s.z));
+}
 
-    spawn.position.copy(spawnPos);
-    scene.add(spawn);
+function dist3(a, b) {
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2);
+}
 
-    const target = new THREE.Mesh(
-      new THREE.SphereGeometry(0.7, 18, 18),
-      new THREE.MeshStandardMaterial({ color: 0x1a7a4a, emissive: 0x12361f, roughness: 0.35 })
-    );
-    target.position.copy(targetPos);
-    scene.add(target);
+/* ─── EPISODE MANAGEMENT ─── */
+function loadEp(idx) {
+  const ep = episodes[idx];
+  if (!ep) return;
+  currentEp   = ep;
+  currentStep = 0;
+  cumReward   = 0;
 
-    const drone = new THREE.Mesh(
-      new THREE.SphereGeometry(0.45, 20, 20),
-      new THREE.MeshStandardMaterial({ color: 0x00b4d8, emissive: 0x034d5d, roughness: 0.4 })
-    );
-    scene.add(drone);
+  stepSlider.min   = '0';
+  stepSlider.max   = String(Math.max(1, ep.steps.length - 1));
+  stepSlider.value = '0';
 
-    let fullPathLine = null;
-    let trailLine = null;
-    let lastTime = performance.now();
-    let accum = 0;
+  $('hud-ep-num').innerHTML = ep.ep;
 
-    function setStatus(text) {
-      statusEl.textContent = text;
-    }
+  if (fullPathLine) scene.remove(fullPathLine);
+  if (showGhost) {
+    fullPathLine = makeLine(epPoints(ep), 0x333333, 0.5);
+    scene.add(fullPathLine);
+  }
+  if (trailLine) { scene.remove(trailLine); trailLine = null; }
+  updateStep(0);
+}
 
-    function parseCSV(text) {
-      const lines = text.trim().split(/\r?\n/);
-      if (lines.length < 2) return [];
-      const headers = lines[0].split(",").map(h => h.trim());
-      return lines.slice(1).filter(Boolean).map(line => {
-        const cols = line.split(",");
-        const row = {};
-        headers.forEach((h, i) => {
-          const raw = (cols[i] ?? "").trim();
-          const n = Number(raw);
-          row[h] = raw !== "" && Number.isFinite(n) ? n : raw;
-        });
-        return row;
-      });
-    }
+function updateStep(step) {
+  if (!currentEp) return;
+  const i = Math.max(0, Math.min(step, currentEp.steps.length - 1));
+  currentStep = i;
+  const s   = currentEp.steps[i];
+  const pos = ned2three(s.x, s.y, s.z);
 
-    function buildEpisodes(rows) {
-      const byEp = new Map();
-      for (const r of rows) {
-        if (!byEp.has(r.episode)) byEp.set(r.episode, []);
-        byEp.get(r.episode).push(r);
-      }
-      return [...byEp.entries()]
-        .sort((a, b) => a[0] - b[0])
-        .map(([ep, steps]) => ({
-          ep,
-          steps: steps.sort((a, b) => a.step - b.step),
-        }));
-    }
+  // Move drone
+  droneObj.position.copy(pos);
+  droneGlow.position.copy(pos);
+  droneRing.position.copy(pos);
 
-    function lineFromPoints(points, color, opacity, width = 2.5) {
-      const geom = new THREE.BufferGeometry().setFromPoints(points);
-      const mat = new THREE.LineBasicMaterial({
-        color,
-        transparent: true,
-        opacity,
-        linewidth: width,
-      });
-      return new THREE.Line(geom, mat);
-    }
-
-    function episodePoints(ep) {
-      return ep.steps.map(s => worldPoint(s.x, s.y, s.z));
-    }
-
-    function clampStep(step) {
-      if (!currentEpisode) return 0;
-      return Math.max(0, Math.min(step, currentEpisode.steps.length - 1));
-    }
-
-    function updateDroneAtStep(step) {
-      if (!currentEpisode) return;
-      const i = clampStep(step);
-      currentStep = i;
-      const s = currentEpisode.steps[i];
-      drone.position.copy(worldPoint(s.x, s.y, s.z));
-
-      const trailPts = episodePoints(currentEpisode).slice(0, i + 1);
-      if (trailLine) scene.remove(trailLine);
-      trailLine = lineFromPoints(trailPts, 0x00b4d8, 0.92, 3);
+  // Trail
+  if (trailLine) scene.remove(trailLine);
+  if (showTrail) {
+    const pts = epPoints(currentEp).slice(0, i + 1);
+    if (pts.length >= 2) {
+      trailLine = makeGradientTrail(pts);
       scene.add(trailLine);
-
-      stepSlider.value = String(i);
-      setStatus(
-        `Episode ${currentEpisode.ep} · Step ${i}/${currentEpisode.steps.length - 1} · Reward ${Number(s.reward).toFixed(3)}`
-      );
     }
+  }
 
-    function loadEpisodeByIndex(idx) {
-      if (!episodes.length) return;
-      const ep = episodes[idx];
-      if (!ep) return;
-      currentEpisode = ep;
-      currentStep = 0;
-      stepSlider.min = "0";
-      stepSlider.max = String(Math.max(1, ep.steps.length - 1));
-      stepSlider.value = "0";
+  cumReward = currentEp.steps.slice(0, i + 1).reduce((a, r) => a + Number(r.reward || 0), 0);
 
-      if (fullPathLine) scene.remove(fullPathLine);
-      if (trailLine) scene.remove(trailLine);
-      fullPathLine = lineFromPoints(episodePoints(ep), 0xff7b54, 0.88, 2);
-      scene.add(fullPathLine);
+  const tPos = ned2three(TARGET_NED.x, TARGET_NED.y, TARGET_NED.z);
+  const d    = dist3(pos, tPos).toFixed(2);
+  const rwd  = Number(s.reward || 0);
 
-      updateDroneAtStep(0);
+  $('t-x').textContent = pos.x.toFixed(2) + ' m';
+  $('t-y').textContent = pos.z.toFixed(2) + ' m';
+  $('t-z').textContent = (-pos.y).toFixed(2) + ' m';
+
+  const rwdEl = $('t-reward');
+  rwdEl.textContent  = rwd.toFixed(3);
+  rwdEl.className    = 'hud-val ' + (rwd > 0 ? 'green' : rwd < -50 ? 'red' : 'white');
+
+  $('t-cumreward').textContent = cumReward.toFixed(1);
+  $('t-dist').textContent      = d + ' m';
+  $('t-step').textContent      = 'Step ' + i;
+  $('t-total').textContent     = '/ ' + (currentEp.steps.length - 1);
+  $('t-prog').style.width      = (i / Math.max(currentEp.steps.length - 1, 1) * 100).toFixed(1) + '%';
+  stepSlider.value             = String(i);
+
+  setStatus('EP ' + currentEp.ep + '  ·  Step ' + i + ' / ' + (currentEp.steps.length - 1) + '  ·  Reward ' + cumReward.toFixed(1), 'ok');
+}
+
+/* ─── STATUS ─── */
+function setStatus(msg, state = 'ok') {
+  statusText.textContent = msg;
+  statusDot.className = 'status-dot' + (state === 'ok' ? '' : state === 'loading' ? ' loading' : ' error');
+}
+
+/* ─── RESIZE ─── */
+function resize() {
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+
+/* ─── ANIMATION LOOP ─── */
+function tick(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.1);
+  lastTime  = now;
+  accum    += dt * speed;
+
+  if (playing && currentEp) {
+    while (accum >= 0.042) {
+      accum -= 0.042;
+      const next = currentStep + 1;
+      if (next >= currentEp.steps.length) { playing = false; setPlayState(false); break; }
+      updateStep(next);
     }
+  } else {
+    accum = 0;
+  }
 
-    function resize() {
-      const w = wrap.clientWidth;
-      const h = wrap.clientHeight;
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
-      renderer.setSize(w, h);
+  const t = now * 0.001;
+
+  // Target rings pulse
+  if (targetRing1) {
+    targetRing1.scale.setScalar(1 + 0.13 * Math.sin(t * 2.2));
+    targetRing1.material.opacity = 0.28 + 0.12 * Math.sin(t * 2.2);
+  }
+  if (targetRing2) {
+    targetRing2.scale.setScalar(1 + 0.2 * Math.sin(t * 1.5 + 1));
+    targetRing2.material.opacity = 0.1 + 0.07 * Math.sin(t * 1.5);
+  }
+  if (targetBeacon) {
+    targetBeacon.material.emissiveIntensity = 0.28 + 0.15 * Math.sin(t * 3);
+  }
+
+  // Drone ring + glow pulse
+  if (droneRing) {
+    droneRing.scale.setScalar(1 + 0.09 * Math.sin(t * 4.2));
+    droneRing.material.opacity = 0.38 + 0.12 * Math.sin(t * 4.2);
+  }
+  if (droneGlow) {
+    droneGlow.scale.setScalar(3.5 + 0.6 * Math.sin(t * 3.8));
+  }
+
+  // Obstacles pulse
+  obstacleObjs.forEach((o, i) => {
+    if (o.material && !o.material.wireframe) {
+      o.material.emissiveIntensity = 0.22 + 0.1 * Math.sin(t * 1.9 + i * 0.8);
     }
+  });
 
-    async function loadData() {
-      const resp = await fetch("eval_results/trajectories.csv");
-      if (!resp.ok) throw new Error("Could not fetch eval_results/trajectories.csv");
-      const text = await resp.text();
-      const rows = parseCSV(text);
-      episodes = buildEpisodes(rows);
-      if (!episodes.length) throw new Error("No episodes found in trajectories CSV");
+  // Stars slow drift
+  if (stars) stars.rotation.y = t * 0.008;
 
-      episodeSelect.innerHTML = episodes
-        .map((e, i) => `<option value="${i}">Episode ${e.ep}</option>`)
-        .join("");
-      loadEpisodeByIndex(0);
-      setStatus(`Loaded ${episodes.length} episodes`);
-    }
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
 
-    playBtn.addEventListener("click", () => {
-      if (currentEpisode && currentStep >= currentEpisode.steps.length - 1) {
-        updateDroneAtStep(0);
-      }
-      playing = !playing;
-      playBtn.textContent = playing ? "Pause" : "Play Trajectory";
-    });
+/* ─── PLAY STATE ─── */
+function setPlayState(p) {
+  playing = p;
+  playLabel.textContent = p ? 'PAUSE' : 'PLAY';
+  playIcon.innerHTML    = p
+    ? '<rect x="2" y="1" width="3" height="10" rx="1"/><rect x="7" y="1" width="3" height="10" rx="1"/>'
+    : '<polygon points="2,1 11,6 2,11"/>';
+  playBtn.classList.toggle('playing', p);
+  playBtn.classList.toggle('primary', !p);
+}
 
-    resetBtn.addEventListener("click", () => {
-      playing = false;
-      playBtn.textContent = "Play Trajectory";
-      updateDroneAtStep(0);
-    });
+/* ─── DATA LOAD ─── */
+async function loadData() {
+  setStatus('Loading trajectories…', 'loading');
+  const res = await fetch('eval_results/trajectories.csv');
+  if (!res.ok) throw new Error('Cannot fetch eval_results/trajectories.csv');
+  const rows = parseCSV(await res.text());
+  episodes   = buildEpisodes(rows);
+  if (!episodes.length) throw new Error('No episodes in CSV');
 
-    episodeSelect.addEventListener("change", () => {
-      playing = false;
-      playBtn.textContent = "Play Trajectory";
-      loadEpisodeByIndex(+episodeSelect.value);
-    });
+  epSel.innerHTML = episodes.map((e, i) => `<option value="${i}">Episode ${e.ep}</option>`).join('');
+  loadEp(0);
+  setStatus('Loaded ' + episodes.length + ' episodes', 'ok');
+}
 
-    stepSlider.addEventListener("input", () => {
-      playing = false;
-      playBtn.textContent = "Play Trajectory";
-      updateDroneAtStep(+stepSlider.value);
-    });
+/* ─── EVENTS ─── */
+playBtn.addEventListener('click', () => {
+  if (currentEp && currentStep >= currentEp.steps.length - 1) updateStep(0);
+  setPlayState(!playing);
+});
 
-    speedSlider.addEventListener("input", () => {
-      speed = Number(speedSlider.value) || 1;
-    });
+resetBtn.addEventListener('click', () => { setPlayState(false); updateStep(0); });
 
-    function tick(now) {
-      const dt = (now - lastTime) / 1000;
-      lastTime = now;
-      accum += dt * speed;
+epSel.addEventListener('change', () => { setPlayState(false); loadEp(+epSel.value); });
 
-      if (playing && currentEpisode) {
-        while (accum >= 0.045) {
-          accum -= 0.045;
-          const next = currentStep + 1;
-          if (next >= currentEpisode.steps.length) {
-            playing = false;
-            playBtn.textContent = "Play Trajectory";
-            break;
-          }
-          updateDroneAtStep(next);
-        }
-      }
+stepSlider.addEventListener('input', () => { setPlayState(false); updateStep(+stepSlider.value); });
 
-      controls.update();
-      renderer.render(scene, camera);
-      requestAnimationFrame(tick);
-    }
+speedSlider.addEventListener('input', () => {
+  speed = +speedSlider.value || 1;
+  speedVal.textContent = speed + '×';
+});
 
-    window.addEventListener("resize", resize);
-    resize();
-    requestAnimationFrame(tick);
+trailBtn.addEventListener('click', () => {
+  showTrail = !showTrail;
+  trailBtn.textContent = showTrail ? 'TRAIL ON' : 'TRAIL OFF';
+  if (!showTrail && trailLine) { scene.remove(trailLine); trailLine = null; }
+  else if (showTrail && currentEp) updateStep(currentStep);
+});
 
-    loadData().catch(err => {
-      setStatus(`Error: ${err.message}. Serve with: python3 -m http.server`);
-    });
-  </script>
+ghostBtn.addEventListener('click', () => {
+  showGhost = !showGhost;
+  ghostBtn.textContent = showGhost ? 'GHOST PATH' : 'GHOST OFF';
+  if (!showGhost && fullPathLine) { scene.remove(fullPathLine); fullPathLine = null; }
+  else if (showGhost && currentEp) { fullPathLine = makeLine(epPoints(currentEp), 0x333333, 0.5); scene.add(fullPathLine); }
+});
 
-  <script>
-    function setImportError() {
-      const el = document.getElementById("status");
-      if (el && el.textContent.includes("Loading trajectories")) {
-        el.textContent = "Error: 3D assets failed to load. Check internet access for CDN imports.";
-      }
-    }
-    window.addEventListener("error", () => {
-      setImportError();
-    });
-    window.addEventListener("unhandledrejection", () => setImportError());
-  </script>
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space')      { e.preventDefault(); playBtn.click(); }
+  if (e.code === 'KeyR')       { e.preventDefault(); resetBtn.click(); }
+  if (e.code === 'ArrowRight' && currentEp) { setPlayState(false); updateStep(Math.min(currentStep + 1, currentEp.steps.length - 1)); }
+  if (e.code === 'ArrowLeft'  && currentEp) { setPlayState(false); updateStep(Math.max(currentStep - 1, 0)); }
+});
+
+window.addEventListener('resize', resize);
+
+/* ─── INIT ─── */
+await loadThree();
+buildScene();
+resize();
+requestAnimationFrame(tick);
+loadData().catch(err => {
+  setStatus('Run: python3 -m http.server  —  ' + err.message, 'error');
+});
+</script>
+
+<script>
+window.addEventListener('unhandledrejection', () => {
+  const t = document.getElementById('status-text');
+  const d = document.getElementById('status-dot');
+  if (t) t.textContent = 'CDN load failed — check internet connection';
+  if (d) d.className = 'status-dot error';
+});
+</script>
 </body>
 </html>
