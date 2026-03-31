@@ -1,6 +1,6 @@
 # AeroPath RL
 
-![ ](screenshots/README - 1.png)
+![ ](screenshots/README%20-%201.png)
 
 [![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python)](https://www.python.org)
 [![Gymnasium](https://img.shields.io/badge/Gymnasium-0.29.1-blue?logo=gym)](https://gymnasium.farama.org)
