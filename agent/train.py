@@ -35,10 +35,6 @@ console = Console()
 
 
 class DroneTrainingCallback(BaseCallback):
-    """
-    Logs episode reward, goal-rate, collision-rate to TensorBoard and console.
-    """
-
     def __init__(self, log_freq: int = 1000, verbose: int = 0):
         super().__init__(verbose)
         self.log_freq = log_freq
@@ -71,7 +67,6 @@ class DroneTrainingCallback(BaseCallback):
 
 
 def _make_env(cfg: EnvConfig, rank: int = 0, seed: int = 0):
-    """Return a callable that creates a monitored DroneNavigationEnv."""
     def _init():
         env = DroneNavigationEnv(cfg=cfg)
         env = Monitor(env)
@@ -95,15 +90,6 @@ def build_vec_env(
 
 
 class DroneTrainer:
-    """
-    High-level training orchestrator.
-
-    Parameters
-    ----------
-    env_cfg   : Environment configuration.
-    train_cfg : Training / algorithm hyperparameters.
-    """
-
     def __init__(
         self,
         env_cfg: EnvConfig = ENV_CONFIG,

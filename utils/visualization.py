@@ -1,16 +1,3 @@
-"""
-utils/visualization.py
-Plotting utilities for training analysis and flight-path visualisation.
-
-Functions
-─────────
-  plot_training_rewards     – episode reward curve with moving average
-  plot_reward_components    – stacked area chart of reward breakdown
-  plot_episode_trajectory   – 3-D flight path with start / goal markers
-  plot_evaluation_summary   – bar chart of batch evaluation metrics
-  plot_sensor_heatmap       – heat-map of distance-sensor activations
-"""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -70,13 +57,6 @@ def plot_reward_components(
     component_history: List[Dict[str, float]],
     save_path: Optional[str] = None,
 ) -> plt.Figure:
-    """
-    Stacked area chart showing per-step reward components.
-
-    Parameters
-    ----------
-    component_history : List of dicts from RewardInfo.as_dict()
-    """
     df = pd.DataFrame(component_history)
     cols = [c for c in df.columns if c != "reward/total"]
     df = df[cols].clip(lower=0)

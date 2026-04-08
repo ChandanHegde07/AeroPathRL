@@ -84,10 +84,7 @@ class RewardFunction:
         return math.sqrt((px - tx) ** 2 + (py - ty) ** 2 + (pz - tz) ** 2)
 
     def _altitude_penalty(self, altitude: float) -> float:
-        """
-        Returns a negative penalty when the drone flies outside [2, 25] metres.
-        Linear ramp with the configured scale coefficient.
-        """
+
         lo, hi = 2.0, 25.0
         if altitude < lo:
             excess = lo - altitude

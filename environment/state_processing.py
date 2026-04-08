@@ -1,17 +1,3 @@
-"""
-environment/state_processing.py
-Converts raw simulator sensor data into a normalised flat observation vector
-that can be fed directly to the policy network.
-
-Observation vector layout (total = 3 + 3 + 3 + N_sensors + 1 = 10 + N)
-────────────────────────────────────────────────────────────────────────
-  [0:3]       normalised relative position to target  (dx, dy, dz)
-  [3:6]       normalised linear velocity              (vx, vy, vz)
-  [6:9]       normalised orientation angles           (roll, pitch, yaw)
-  [9:9+N]     normalised distance-sensor readings     (0-1 each)
-  [9+N]       normalised distance to target           (scalar)
-"""
-
 from __future__ import annotations
 
 import math
@@ -23,15 +9,6 @@ from config.env_config import EnvConfig, ENV_CONFIG
 
 
 class StateProcessor:
-    """
-    Transforms raw drone state + sensor readings into a
-    normalised numpy observation vector.
-
-    Parameters
-    ----------
-    cfg : EnvConfig
-    """
-
     def __init__(self, cfg: EnvConfig = ENV_CONFIG):
         self.cfg = cfg
         self._target = np.array(cfg.target_position, dtype=np.float32)
@@ -50,18 +27,6 @@ class StateProcessor:
         multirotor_state: Any,
         sensor_readings: List[float],
     ) -> np.ndarray:
-        """
-        Build the observation vector from simulator state objects.
-
-        Parameters
-        ----------
-        multirotor_state : Any
-        sensor_readings  : list of floats, one per distance sensor
-
-        Returns
-        -------
-        np.ndarray, shape (obs_dim,), dtype float32, values clipped to [-1, 1]
-        """
         pos = self._extract_position(multirotor_state)
         vel = self._extract_velocity(multirotor_state)
         ori = self._extract_orientation(multirotor_state)
@@ -89,10 +54,6 @@ class StateProcessor:
         orientation: tuple[float, float, float] = (0.0, 0.0, 0.0),
         sensor_readings: Optional[List[float]] = None,
     ) -> np.ndarray:
-        """
-        Build an observation vector from raw tuples (useful for local
-        simulation backends and unit testing).
-        """
         if sensor_readings is None:
             sensor_readings = [self.cfg.sensor_max_range] * self.cfg.num_distance_sensors
 
@@ -128,7 +89,6 @@ class StateProcessor:
 
     @staticmethod
     def _extract_orientation(state: Any) -> np.ndarray:
-        """Convert quaternion → Euler (roll, pitch, yaw) normalised to [-1,1]."""
         q = state.kinematics_estimated.orientation
         w, x, y, z = q.w_val, q.x_val, q.y_val, q.z_val
 

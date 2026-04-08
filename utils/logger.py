@@ -1,13 +1,3 @@
-"""
-utils/logger.py
-Lightweight training logger.
-
-Writes metrics to:
-  • Console (via Rich)
-  • A CSV file (one row per log call)
-  • TensorBoard (via torch.utils.tensorboard when available)
-"""
-
 from __future__ import annotations
 
 import csv
@@ -28,16 +18,6 @@ except ImportError:
 
 
 class TrainingLogger:
-    """
-    Logs scalar metrics during training.
-
-    Parameters
-    ----------
-    log_dir  : Directory where CSV and TensorBoard logs are written.
-    run_name : Optional name for the run (used for the TB sub-directory).
-    use_tb   : Whether to write to TensorBoard (requires torch).
-    """
-
     def __init__(
         self,
         log_dir: str = "logs/",
@@ -62,14 +42,6 @@ class TrainingLogger:
 
 
     def log(self, metrics: Dict[str, float], step: Optional[int] = None):
-        """
-        Log a dictionary of scalar metrics.
-
-        Parameters
-        ----------
-        metrics : {name: value} pairs
-        step    : Global step counter (defaults to internal counter)
-        """
         if step is None:
             step = self._step
         self._step = step + 1
@@ -100,7 +72,6 @@ class TrainingLogger:
         goal_reached: bool,
         collision: bool,
     ):
-        """Convenience wrapper for common end-of-episode metrics."""
         self.log(
             {
                 "episode/total_reward": total_reward,
@@ -112,7 +83,6 @@ class TrainingLogger:
         )
 
     def log_text(self, message: str, prefix: str = "ℹ"):
-        """Print a timestamped message to the console."""
         elapsed = time.time() - self._start_t
         console.print(f"[dim]{elapsed:8.1f}s[/dim]  {prefix}  {message}")
 

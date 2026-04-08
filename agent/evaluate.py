@@ -24,7 +24,6 @@ console = Console()
 
 
 class LiveTrajectory2D:
-    """Simple live 2D trajectory viewer (X-Z plane)."""
 
     def __init__(self, env_cfg: EnvConfig):
         self.cfg = env_cfg
@@ -74,8 +73,6 @@ class LiveTrajectory2D:
 
 
 class EpisodeResult:
-    """Holds all data from a single evaluation episode."""
-
     def __init__(self):
         self.positions:   List[Tuple[float, float, float]] = []
         self.rewards:     List[float]  = []
@@ -137,15 +134,6 @@ def _run_episode(
 
 
 class DroneEvaluator:
-    """
-    Loads a trained PPO model and evaluates it on the drone environment.
-
-    Parameters
-    ----------
-    model_path : Path or str to the saved .zip model.
-    env_cfg    : Environment configuration.
-    """
-
     def __init__(
         self,
         model_path: str,
@@ -159,7 +147,6 @@ class DroneEvaluator:
 
 
     def evaluate_single(self, render: bool = True, render_2d: bool = False) -> EpisodeResult:
-        """Run and display one evaluation episode."""
         env = DroneNavigationEnv(cfg=self.env_cfg)
         viewer = LiveTrajectory2D(self.env_cfg) if render_2d else None
         result = _run_episode(
@@ -182,7 +169,6 @@ class DroneEvaluator:
         save_trajectories: bool = False,
         output_dir: Optional[str] = None,
     ) -> Dict:
-        """Run multiple episodes and return aggregate statistics."""
         results: List[EpisodeResult] = []
         env = DroneNavigationEnv(cfg=self.env_cfg)
 
@@ -224,8 +210,8 @@ class DroneEvaluator:
 
     @staticmethod
     def _print_single_result(result: EpisodeResult):
-        status = "✅ GOAL REACHED" if result.goal_reached else \
-                 "💥 COLLISION"   if result.collision     else "⏱  TIMEOUT"
+        status = "GOAL REACHED" if result.goal_reached else \
+                 "COLLISION"   if result.collision     else "⏱  TIMEOUT"
         console.print(
             f"\n[bold]{status}[/bold]\n"
             f"  Steps        : {result.steps}\n"

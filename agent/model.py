@@ -36,20 +36,6 @@ def _build_mlp(
 
 
 class DroneActorCritic(nn.Module):
-    """
-    Actor-Critic network for the drone navigation task.
-
-    Parameters
-    ----------
-    obs_dim      : Dimension of the flat observation vector.
-    action_dim   : Number of continuous action dimensions (3 for vx,vy,vz).
-    shared_arch  : Hidden sizes of the shared feature encoder.
-    actor_arch   : Hidden sizes of the actor head (after shared layers).
-    critic_arch  : Hidden sizes of the critic head (after shared layers).
-    activation   : Activation class (nn.Tanh / nn.ReLU …).
-    log_std_init : Initial value of the log-standard-deviation parameter.
-    """
-
     def __init__(
         self,
         obs_dim: int,
@@ -88,19 +74,16 @@ class DroneActorCritic(nn.Module):
         return self.encoder(obs)
 
     def actor_forward(self, obs: Tensor) -> Tuple[Tensor, Tensor]:
-        """Returns (action_mean, action_log_std)."""
         latent = self.encode(obs)
         mean   = torch.tanh(self.actor_mean(self.actor_net(latent)))
         log_std = self.log_std.expand_as(mean)
         return mean, log_std
 
     def critic_forward(self, obs: Tensor) -> Tensor:
-        """Returns scalar value estimate."""
         latent = self.encode(obs)
         return self.critic_out(self.critic_net(latent))
 
     def forward(self, obs: Tensor) -> Tuple[Tensor, Tensor, Tensor]:
-        """Returns (action_mean, log_std, value)."""
         latent  = self.encode(obs)
         mean    = torch.tanh(self.actor_mean(self.actor_net(latent)))
         log_std = self.log_std.expand_as(mean)
@@ -130,7 +113,6 @@ class DroneActorCritic(nn.Module):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)
 
     def export_onnx(self, path: str, obs_dim: int, device: str = "cpu"):
-        """Export the actor to ONNX for deployment."""
         self.eval()
         dummy = torch.zeros(1, obs_dim, device=device)
         torch.onnx.export(
@@ -149,15 +131,6 @@ def build_sb3_policy_kwargs(
     net_arch: List[int] = None,
     activation_fn_name: str = "tanh",
 ) -> dict:
-    """
-    Returns a policy_kwargs dict for Stable-Baselines3's MlpPolicy.
-
-    Usage
-    -----
-    >>> from stable_baselines3 import PPO
-    >>> kwargs = build_sb3_policy_kwargs([256, 256])
-    >>> model = PPO("MlpPolicy", env, policy_kwargs=kwargs)
-    """
     net_arch = net_arch or [256, 256]
 
     _activation_map = {
