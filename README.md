@@ -2,11 +2,6 @@
 
 ![ ](screenshots/README%20-%201.png)
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python)](https://www.python.org)
-[![Gymnasium](https://img.shields.io/badge/Gymnasium-0.29.1-blue?logo=gym)](https://gymnasium.farama.org)
-[![Stable-Baselines3](https://img.shields.io/badge/SB3-2.2.1-green?logo=stable-baselines3)](https://stable-baselines3.readthedocs.io)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
-
 AeroPath RL is an autonomous drone navigation project using reinforcement learning. The agent is trained to fly from spawn to target in 3D space while avoiding collisions using PPO with a local simulator backend.
 
 ## Table of Contents
