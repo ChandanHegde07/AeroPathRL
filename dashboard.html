@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AeroPath RL Dashboard</title>
+  <meta name="description" content="AeroPath RL Dashboard — Training and evaluation metrics for drone RL navigation" />
+  <meta name="theme-color" content="#006d77" />
+  <title>AeroPath RL — Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
@@ -31,6 +33,25 @@
       --shadow-s: 0 1px 4px rgba(14,31,53,0.06);
       --font:     'Plus Jakarta Sans', system-ui, sans-serif;
       --mono:     'JetBrains Mono', ui-monospace, monospace;
+      --transition: 0.2s ease;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:       #0a131f;
+        --panel:    #0f1a2a;
+        --ink:      #e2ecf5;
+        --ink-2:    #c2d4e8;
+        --muted:    #7a8fa8;
+        --line:     #1e2d44;
+        --line-2:   #2a3d57;
+        --accent-l: #0e2a30;
+        --ok-l:     #0e261b;
+        --danger-l: #2a0e12;
+        --amber-l:  #2a1f0a;
+        --shadow:   0 2px 8px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+        --shadow-s: 0 1px 4px rgba(0,0,0,0.25);
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -43,6 +64,7 @@
         radial-gradient(ellipse 80% 50% at 10% 0%, rgba(0,109,119,0.07) 0%, transparent 60%),
         radial-gradient(ellipse 60% 40% at 90% 100%, rgba(42,157,143,0.06) 0%, transparent 60%);
       min-height: 100vh;
+      transition: background var(--transition), color var(--transition);
     }
 
     .wrap {
@@ -53,7 +75,6 @@
       gap: 16px;
     }
 
-    /* ── HERO ── */
     .hero {
       background: linear-gradient(130deg, #002f3f 0%, #006d77 52%, #2a9d8f 100%);
       border-radius: calc(var(--radius) + 4px);
@@ -63,9 +84,7 @@
       grid-template-columns: 1fr auto;
       gap: 24px;
       align-items: center;
-      animation: fadeDown 0.5s ease both;
     }
-
     .hero-text h1 {
       font-size: clamp(1.3rem, 3vw, 1.9rem);
       font-weight: 700;
@@ -73,21 +92,18 @@
       letter-spacing: -0.3px;
       margin-bottom: 8px;
     }
-
     .hero-text p {
       font-size: 14px;
       line-height: 1.65;
       color: rgba(255,255,255,0.82);
       max-width: 600px;
     }
-
     .hero-badge {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       gap: 8px;
     }
-
     .pill {
       display: inline-flex;
       align-items: center;
@@ -101,7 +117,6 @@
       border: 1px solid rgba(255,255,255,0.18);
       white-space: nowrap;
     }
-
     .pill-dot {
       width: 6px; height: 6px;
       border-radius: 50%;
@@ -110,13 +125,11 @@
       animation: blink 2s ease-in-out infinite;
     }
 
-    /* ── KPI ROW ── */
     .kpi-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 12px;
     }
-
     .kpi {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -125,20 +138,14 @@
       padding: 18px 20px;
       position: relative;
       overflow: hidden;
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background var(--transition);
     }
-
-    .kpi:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow);
-    }
-
+    .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
     .kpi-stripe {
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 3px;
     }
-
     .kpi-icon {
       width: 34px; height: 34px;
       border-radius: 9px;
@@ -146,38 +153,16 @@
       margin-bottom: 10px;
       font-size: 15px;
     }
+    .kpi-label { font-size: 11.5px; font-weight: 500; color: var(--muted); letter-spacing: 0.2px; margin-bottom: 4px; }
+    .kpi-value { font-size: clamp(1.5rem, 2.5vw, 2rem); font-weight: 700; letter-spacing: -0.5px; line-height: 1; color: var(--ink); }
+    .kpi-sub { font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-top: 6px; }
 
-    .kpi-label {
-      font-size: 11.5px;
-      font-weight: 500;
-      color: var(--muted);
-      letter-spacing: 0.2px;
-      margin-bottom: 4px;
-    }
-
-    .kpi-value {
-      font-size: clamp(1.5rem, 2.5vw, 2rem);
-      font-weight: 700;
-      letter-spacing: -0.5px;
-      line-height: 1;
-      color: var(--ink);
-    }
-
-    .kpi-sub {
-      font-family: var(--mono);
-      font-size: 10.5px;
-      color: var(--muted);
-      margin-top: 6px;
-    }
-
-    /* ── SECTION HEADER ── */
     .section-hd {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-top: 4px;
     }
-
     .section-hd span {
       font-size: 11px;
       font-weight: 600;
@@ -186,7 +171,6 @@
       color: var(--muted);
       white-space: nowrap;
     }
-
     .section-hd::after {
       content: '';
       flex: 1;
@@ -194,12 +178,8 @@
       background: var(--line);
     }
 
-    /* ── CARDS ── */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
 
     .card {
       background: var(--panel);
@@ -207,9 +187,8 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow-s);
       padding: 20px;
-      transition: box-shadow 0.18s ease;
+      transition: box-shadow 0.18s ease, background var(--transition), border-color var(--transition);
     }
-
     .card:hover { box-shadow: var(--shadow); }
 
     .card-hd {
@@ -219,13 +198,7 @@
       margin-bottom: 16px;
       gap: 12px;
     }
-
-    .card-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--ink-2);
-    }
-
+    .card-title { font-size: 14px; font-weight: 600; color: var(--ink-2); }
     .tag {
       font-family: var(--mono);
       font-size: 10px;
@@ -238,25 +211,21 @@
       flex-shrink: 0;
     }
 
-    /* ── CHART CONTAINER ── */
     .chart-box {
       border: 1px solid var(--line);
       border-radius: var(--radius-s);
       overflow: hidden;
       min-height: 230px;
-      background: #fafcff;
+      background: var(--bg);
     }
-
     .chart-box svg { display: block; width: 100%; }
 
-    /* ── LEGEND ── */
     .legend {
       display: flex;
       flex-wrap: wrap;
       gap: 14px;
       margin-top: 12px;
     }
-
     .legend span {
       display: inline-flex;
       align-items: center;
@@ -264,15 +233,8 @@
       font-size: 12px;
       color: var(--muted);
     }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 
-    .dot {
-      width: 9px; height: 9px;
-      border-radius: 50%;
-      display: inline-block;
-      flex-shrink: 0;
-    }
-
-    /* ── TOOLBAR ── */
     .toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -280,12 +242,7 @@
       gap: 10px;
       margin-bottom: 14px;
     }
-
-    .toolbar label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--muted);
-    }
+    .toolbar label { font-size: 12px; font-weight: 500; color: var(--muted); }
 
     select {
       padding: 6px 10px;
@@ -295,12 +252,11 @@
       font-size: 12.5px;
       font-weight: 500;
       color: var(--ink);
-      background: #fff;
+      background: var(--panel);
       cursor: pointer;
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
-
     select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,109,119,0.1); }
 
     button {
@@ -315,7 +271,6 @@
       cursor: pointer;
       transition: background 0.15s, border-color 0.15s, transform 0.1s;
     }
-
     button:hover { background: #c5ecee; border-color: rgba(0,109,119,0.4); transform: translateY(-1px); }
     button:active { transform: translateY(0); }
 
@@ -326,94 +281,46 @@
       cursor: pointer;
     }
 
-    /* ── INFO GRID ── */
     .info-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       border: 1px solid var(--line);
       border-radius: var(--radius-s);
       overflow: hidden;
     }
-
     .info-cell {
       padding: 13px 16px;
       border-right: 1px solid var(--line);
       border-bottom: 1px solid var(--line);
       transition: background 0.15s;
     }
-
-    .info-cell:hover { background: #f5f8ff; }
+    .info-cell:hover { background: var(--bg); }
     .info-cell:nth-child(3n) { border-right: none; }
     .info-cell:nth-last-child(-n+3) { border-bottom: none; }
-
-    .info-key {
-      font-size: 10.5px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--muted);
-      margin-bottom: 5px;
-    }
-
-    .info-val {
-      font-family: var(--mono);
-      font-size: 12.5px;
-      color: var(--ink-2);
-    }
-
+    .info-key { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin-bottom: 5px; }
+    .info-val { font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
     .info-val .hi    { color: var(--accent); }
     .info-val .pos   { color: var(--ok); font-weight: 500; }
     .info-val .neg   { color: var(--danger); font-weight: 500; }
     .info-val .amber { color: var(--amber); }
 
-    /* ── CHECKPOINTS ── */
     .ckpt-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
       gap: 12px;
     }
-
     .ckpt-card {
       border: 1px solid var(--line);
       border-radius: var(--radius-s);
       padding: 14px 16px;
-      background: #fafcff;
+      background: var(--bg);
       transition: border-color 0.15s, box-shadow 0.15s;
     }
-
     .ckpt-card:hover { border-color: var(--line-2); box-shadow: var(--shadow-s); }
-
-    .ckpt-num {
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 500;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-    }
-
-    .ckpt-steps {
-      font-family: var(--mono);
-      font-size: 1.35rem;
-      font-weight: 500;
-      color: var(--accent);
-      margin-bottom: 2px;
-    }
-
-    .ckpt-label {
-      font-size: 11px;
-      color: var(--muted);
-      margin-bottom: 10px;
-    }
-
-    .ckpt-bar-wrap {
-      height: 5px;
-      background: var(--line);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
+    .ckpt-num { font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .ckpt-steps { font-family: var(--mono); font-size: 1.35rem; font-weight: 500; color: var(--accent); margin-bottom: 2px; }
+    .ckpt-label { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+    .ckpt-bar-wrap { height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; }
     .ckpt-bar {
       height: 100%;
       background: linear-gradient(90deg, var(--accent), var(--accent-3));
@@ -422,20 +329,18 @@
       transition: width 1s cubic-bezier(0.34, 1.4, 0.64, 1);
     }
 
-    /* ── NOTE ── */
     .note {
       font-size: 12px;
       color: var(--muted);
       margin-top: 12px;
       padding: 10px 14px;
-      background: #f5f8ff;
+      background: var(--bg);
       border: 1px solid var(--line);
       border-radius: var(--radius-s);
       line-height: 1.7;
       font-family: var(--mono);
       overflow-wrap: anywhere;
     }
-
     .note code {
       color: var(--accent);
       background: var(--accent-l);
@@ -444,28 +349,8 @@
       font-size: 11px;
     }
 
-    /* ── ANIMATIONS ── */
-    @keyframes fadeDown {
-      from { opacity: 0; transform: translateY(-16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0.3; }
-    }
-    @keyframes drawPath {
-      from { stroke-dashoffset: 4000; }
-      to   { stroke-dashoffset: 0; }
-    }
-
-    .anim-path {
-      stroke-dasharray: 4000;
-      stroke-dashoffset: 4000;
-      animation: drawPath 1.4s ease forwards;
+    .note.info {
+      border-left: 3px solid var(--accent);
     }
 
     .page-footer {
@@ -477,14 +362,34 @@
       border-top: 1px solid var(--line);
     }
 
-    /* ── RESPONSIVE ── */
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+    @keyframes drawPath {
+      from { stroke-dashoffset: 4000; }
+      to   { stroke-dashoffset: 0; }
+    }
+    .anim-path {
+      stroke-dasharray: 4000;
+      stroke-dashoffset: 4000;
+      animation: drawPath 1.4s ease forwards;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+      .anim-path { stroke-dashoffset: 0; animation: none; }
+    }
+
+    @media (max-width: 1100px) {
+      .info-grid { grid-template-columns: repeat(2, 1fr); }
+      .info-cell:nth-child(2n) { border-right: none; }
+    }
     @media (max-width: 980px) {
       .kpi-row   { grid-template-columns: repeat(2, 1fr); }
       .grid-2    { grid-template-columns: 1fr; }
+      .grid-3    { grid-template-columns: 1fr; }
       .info-grid { grid-template-columns: 1fr 1fr; }
-      .ckpt-grid { grid-template-columns: repeat(2, 1fr); }
-      .info-cell:nth-child(2n) { border-right: none; }
-      .info-cell:nth-child(3n) { border-right: 1px solid var(--line); }
     }
     @media (max-width: 600px) {
       .wrap { margin-top: 14px; }
@@ -492,53 +397,42 @@
       .hero-badge { display: none; }
       .hero { padding: 20px 18px; }
       .card { padding: 16px; }
-      .card-hd {
-        align-items: flex-start;
-        flex-direction: column;
-      }
+      .card-hd { flex-direction: column; align-items: flex-start; }
       .chart-box { min-height: 200px; }
-      .toolbar {
-        width: 100%;
-        align-items: stretch;
-      }
+      .toolbar { width: 100%; flex-direction: column; }
       .toolbar > * { width: 100%; }
       select, button, input[type="file"] { width: 100%; }
       .info-grid { grid-template-columns: 1fr; }
-      .info-cell { border-right: none !important; }
-      .info-cell { border-bottom: 1px solid var(--line); }
+      .info-cell { border-right: none !important; border-bottom: 1px solid var(--line); }
       .info-cell:last-child { border-bottom: none; }
       .ckpt-grid { grid-template-columns: repeat(2, 1fr); }
     }
-
     @media (max-width: 480px) {
       .kpi-row { grid-template-columns: 1fr; }
       .ckpt-grid { grid-template-columns: 1fr; }
-      .section-hd span { letter-spacing: 0.8px; }
     }
   </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- HERO -->
   <section class="hero">
     <div class="hero-text">
       <h1>AeroPath RL Training Dashboard</h1>
       <p>PPO-based autonomous drone navigation trained in a local simulator. Tracks goal-reach success, path efficiency, and collision avoidance across evaluation episodes.</p>
     </div>
     <div class="hero-badge">
-      <span class="pill"><span class="pill-dot"></span>Live Monitor</span>
+      <span class="pill"><span class="pill-dot"></span>Live Data</span>
       <span class="pill">PPO · MLP [256, 256]</span>
       <span class="pill">γ = 0.99 · 1M steps</span>
+      <span class="pill">Curriculum: On</span>
     </div>
   </section>
 
-  <!-- KPIs -->
   <div class="kpi-row" id="kpis"></div>
 
-  <!-- PERFORMANCE CURVES -->
   <div class="section-hd"><span>Performance Curves</span></div>
-  <div class="grid-2" style="animation: fadeUp 0.5s 0.1s ease both;">
+  <div class="grid-2">
     <article class="card">
       <div class="card-hd">
         <span class="card-title">Episode Return</span>
@@ -550,7 +444,6 @@
         <span><i class="dot" style="background:#ff7550"></i>10-ep moving avg</span>
       </div>
     </article>
-
     <article class="card">
       <div class="card-hd">
         <span class="card-title">Episode Length</span>
@@ -561,7 +454,10 @@
         <span><i class="dot" style="background:#2a9d8f"></i>Steps per episode</span>
       </div>
     </article>
+  </div>
 
+  <div class="section-hd"><span>Episode Inspector</span></div>
+  <div class="grid-2">
     <article class="card">
       <div class="card-hd">
         <span class="card-title" id="step-reward-title">Reward Per Step</span>
@@ -573,7 +469,6 @@
       <div class="chart-box" id="step-reward-chart"></div>
       <p class="note" id="episode-meta">Select an episode to inspect per-step reward and trajectory.</p>
     </article>
-
     <article class="card">
       <div class="card-hd">
         <span class="card-title" id="trajectory-title">Trajectory — X / Z Plane</span>
@@ -588,20 +483,18 @@
     </article>
   </div>
 
-  <!-- CHECKPOINTS -->
   <div class="section-hd"><span>Training Checkpoints</span></div>
-  <article class="card" style="animation: fadeUp 0.5s 0.18s ease both;">
+  <article class="card">
     <div class="card-hd">
       <span class="card-title">Checkpoint Progress</span>
-      <span class="tag" id="ckpt-tag">4 SAVED</span>
+      <span class="tag" id="ckpt-tag">0 SAVED</span>
     </div>
     <div class="ckpt-grid" id="ckpt-grid"></div>
     <p class="note" id="checkpoint-note"></p>
   </article>
 
-  <!-- CONFIG REFERENCE -->
   <div class="section-hd"><span>System Parameters</span></div>
-  <article class="card" style="animation: fadeUp 0.5s 0.24s ease both;">
+  <article class="card">
     <div class="card-hd">
       <span class="card-title">Configuration Reference</span>
     </div>
@@ -614,6 +507,7 @@
       <div class="info-cell"><div class="info-key">Learning Rate</div><div class="info-val">3e-4</div></div>
       <div class="info-cell"><div class="info-key">Batch / Epochs</div><div class="info-val">64 / 10</div></div>
       <div class="info-cell"><div class="info-key">Eval / Save Freq</div><div class="info-val">10,000 / 50,000</div></div>
+      <div class="info-cell"><div class="info-key">Curriculum</div><div class="info-val"><span class="hi">On</span> · 3 stages</div></div>
       <div class="info-cell"><div class="info-key">Spawn Position</div><div class="info-val">(0.0, 0.0, −5.0)</div></div>
       <div class="info-cell"><div class="info-key">Target Position</div><div class="info-val"><span class="hi">(30.0, 0.0, −10.0)</span></div></div>
       <div class="info-cell"><div class="info-key">Episode Max Steps</div><div class="info-val">500</div></div>
@@ -636,9 +530,8 @@
     </p>
   </article>
 
-  <!-- TRAINING LOGS -->
   <div class="section-hd"><span>Training Log Upload</span></div>
-  <article class="card" style="animation: fadeUp 0.5s 0.3s ease both;">
+  <article class="card">
     <div class="card-hd">
       <span class="card-title">CSV Training Metrics</span>
       <span class="tag">LIVE</span>
@@ -664,7 +557,7 @@ const FALLBACK = {
   min_reward: 334.49, max_reward: 336.47,
   mean_steps: 57.01, mean_path_length: 31.73
 };
-const CKPT_STEPS = [50000, 100000, 150000, 200000];
+const CKPT_STEPS = [50000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000];
 const LOG_FILES  = ["logs/run_1774752272.csv", "logs/run_1774752365.csv"];
 const TARGET     = { x: 30.0, z: -10.0 };
 const SPAWN      = { x: 0.0,  z: -5.0  };
@@ -711,7 +604,7 @@ function buildSVG({
 
   const all = [...lines.flatMap(l => l.d), ...pts];
   if (!all.length) return `<svg viewBox="0 0 ${W} ${H}">
-    <rect width="${W}" height="${H}" fill="#fafcff"/>
+    <rect width="${W}" height="${H}" fill="transparent"/>
     <text x="${W/2}" y="${H/2}" text-anchor="middle" fill="#9fb0c4" font-size="13"
       font-family="'Plus Jakarta Sans',sans-serif">No data available</text></svg>`;
 
@@ -722,24 +615,21 @@ function buildSVG({
   const sy = y => P.t + h - ((y - y0) / (y1 - y0 || 1)) * h;
   const fmt = v => Math.abs(v) >= 10000 ? (v/1000).toFixed(1)+'k' : v.toFixed(v%1===0?0:1);
 
-  let g = `<rect width="${W}" height="${H}" fill="#fafcff"/>`;
+  let g = `<rect width="${W}" height="${H}" fill="transparent"/>`;
 
-  // Grid lines + Y labels
   for (let i = 0; i <= 4; i++) {
     const yv = y0 + ((y1 - y0) / 4) * i, yp = sy(yv);
-    g += `<line x1="${P.l}" y1="${yp.toFixed(1)}" x2="${P.l+w}" y2="${yp.toFixed(1)}" stroke="${i===0?'#c8d6e8':'#e8eef8'}" stroke-width="${i===0?1.5:1}"/>`;
+    g += `<line x1="${P.l}" y1="${yp.toFixed(1)}" x2="${P.l+w}" y2="${yp.toFixed(1)}" stroke="${i===0?'var(--line-2)':'var(--line)'}" stroke-width="${i===0?1.5:1}"/>`;
     g += `<text x="${P.l-6}" y="${(yp+4).toFixed(1)}" text-anchor="end" fill="#9fb0c4" font-size="9.5" font-family="'JetBrains Mono',monospace">${fmt(yv)}</text>`;
   }
-  // X labels
   for (let i = 0; i <= 5; i++) {
     const xv = x0 + ((x1 - x0) / 5) * i, xp = sx(xv);
-    g += `<line x1="${xp.toFixed(1)}" y1="${P.t}" x2="${xp.toFixed(1)}" y2="${P.t+h}" stroke="#eef2f8" stroke-width="1"/>`;
-    g += `<text x="${xp.toFixed(1)}" y="${P.t+h+18}" text-anchor="middle" fill="#9fb0c4" font-size="9.5" font-family="'JetBrains Mono',monospace">${xv.toFixed(0)}</text>`;
+    g += `<line x1="${xp.toFixed(1)}" y1="${P.t}" x2="${xp.toFixed(1)}" y2="${P.t+h}" stroke="var(--line)" stroke-width="1"/>`;
+    g += `<text x="${xp.toFixed(1)}" y="${P.t+h+18}" text-anchor="middle" fill="#9fb0c4" font-size="9.5" font-family="'JetBrains Mono',monospace">${xv.toFixed(xv%1===0?0:1)}</text>`;
   }
-  g += `<rect x="${P.l}" y="${P.t}" width="${w}" height="${h}" fill="none" stroke="#dde5f0" rx="2"/>`;
+  g += `<rect x="${P.l}" y="${P.t}" width="${w}" height="${h}" fill="none" stroke="var(--line)" rx="2"/>`;
   g += `<text x="${P.l+w/2}" y="${H-4}" text-anchor="middle" fill="#9fb0c4" font-size="11" font-family="'Plus Jakarta Sans',sans-serif">${xLbl}</text>`;
 
-  // Area fills
   lines.forEach(line => {
     if (!line.fill || line.d.length < 2) return;
     const baseY = sy(Math.max(y0, 0));
@@ -752,7 +642,6 @@ function buildSVG({
     </linearGradient></defs><path d="${area}" fill="url(#${id})"/>`;
   });
 
-  // Lines
   lines.forEach((line, idx) => {
     if (line.d.length < 2) return;
     const d = line.d.map((p,i) => `${i===0?'M':'L'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join(' ');
@@ -760,25 +649,37 @@ function buildSVG({
     g += `<path d="${d}" fill="none" stroke="${line.c}" stroke-width="${line.w||2}" stroke-linecap="round" stroke-linejoin="round" opacity="${line.o||1}" ${an}/>`;
   });
 
-  // Points
   pts.forEach(p => {
     g += `<circle cx="${sx(p.x).toFixed(1)}" cy="${sy(p.y).toFixed(1)}" r="6.5" fill="${p.c}" opacity="0.92"/>`;
     g += `<circle cx="${sx(p.x).toFixed(1)}" cy="${sy(p.y).toFixed(1)}" r="11" fill="none" stroke="${p.c}" stroke-width="1.5" opacity="0.28"/>`;
   });
 
-  return `<svg viewBox="0 0 ${W} ${H}">${g}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${xLbl} chart">${g}</svg>`;
 }
+
+/* ─── RESIZE HANDLER ─── */
+let resizeTimer;
+function debouncedRedraw() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    document.querySelectorAll(".chart-box svg").forEach(svg => {
+      const w = svg.parentElement.clientWidth;
+      if (w > 0) svg.setAttribute("viewBox", `0 0 ${Math.max(w, 400)} 230`);
+    });
+  }, 200);
+}
+window.addEventListener("resize", debouncedRedraw);
 
 /* ─── KPIs ─── */
 function renderKPIs(s) {
   const items = [
-    { lbl:"Success Rate",   val: s.success_rate   != null ? `${(s.success_rate*100).toFixed(1)}%` : "—",  sub:`${s.n_episodes??'—'} episodes`,           stripe:"linear-gradient(90deg,#1a7a4a,#2a9d8f)", icon:"✈", iBg:"#d4f0e4", iC:"#1a7a4a" },
-    { lbl:"Mean Reward",    val: s.mean_reward     != null ? s.mean_reward.toFixed(1) : "—",                sub:`σ = ${s.std_reward?.toFixed(3)??'—'}`,    stripe:"linear-gradient(90deg,#006d77,#2a9d8f)", icon:"◎", iBg:"#e0f4f5", iC:"#006d77" },
-    { lbl:"Collision Rate", val: s.collision_rate  != null ? `${(s.collision_rate*100).toFixed(1)}%` : "—", sub:`min ${s.min_reward?.toFixed(1)??'—'}`,    stripe:"linear-gradient(90deg,#c1121f,#ff7550)", icon:"⚠", iBg:"#fde8e9", iC:"#c1121f" },
-    { lbl:"Mean Steps",     val: s.mean_steps      != null ? s.mean_steps.toFixed(0) : "—",                sub:`path ${s.mean_path_length?.toFixed(1)??'—'} m`, stripe:"linear-gradient(90deg,#d97706,#f59e0b)", icon:"⏱", iBg:"#fef3c7", iC:"#d97706" },
+    { lbl:"Success Rate",   val: s.success_rate   != null ? `${(s.success_rate*100).toFixed(1)}%` : "—",  sub:`${s.n_episodes??'—'} episodes`,           stripe:"linear-gradient(90deg,#1a7a4a,#2a9d8f)", icon:"✈", iBg:"var(--ok-l)", iC:"var(--ok)" },
+    { lbl:"Mean Reward",    val: s.mean_reward     != null ? s.mean_reward.toFixed(1) : "—",                sub:`σ = ${s.std_reward?.toFixed(3)??'—'}`,    stripe:"linear-gradient(90deg,#006d77,#2a9d8f)", icon:"◎", iBg:"var(--accent-l)", iC:"var(--accent)" },
+    { lbl:"Collision Rate", val: s.collision_rate  != null ? `${(s.collision_rate*100).toFixed(1)}%` : "—", sub:`min ${s.min_reward?.toFixed(1)??'—'}`,    stripe:"linear-gradient(90deg,#c1121f,#ff7550)", icon:"⚠", iBg:"var(--danger-l)", iC:"var(--danger)" },
+    { lbl:"Mean Steps",     val: s.mean_steps      != null ? s.mean_steps.toFixed(0) : "—",                sub:`path ${s.mean_path_length?.toFixed(1)??'—'} m`, stripe:"linear-gradient(90deg,#d97706,#f59e0b)", icon:"⏱", iBg:"var(--amber-l)", iC:"var(--amber)" },
   ];
   document.getElementById("kpis").innerHTML = items.map((it, i) => `
-    <article class="card kpi" style="animation:fadeUp 0.4s ${i*0.07}s ease both">
+    <article class="kpi" style="animation:fadeUp 0.4s ${i*0.07}s ease both">
       <div class="kpi-stripe" style="background:${it.stripe}"></div>
       <div class="kpi-icon" style="background:${it.iBg};color:${it.iC}">${it.icon}</div>
       <div class="kpi-label">${it.lbl}</div>

@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="AeroPath RL — Autonomous Drone Navigation using Reinforcement Learning" />
+  <meta name="theme-color" content="#005766" />
   <title>AeroPath RL</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #eef3fb;
+      --bg-2: #f8fbff;
       --ink: #0f2038;
+      --ink-2: #1d3656;
       --muted: #5f7490;
       --line: #d4deed;
       --panel: #ffffff;
@@ -17,8 +23,25 @@
       --orange: #ff7b54;
       --orange-2: #ffad8f;
       --radius: 14px;
+      --radius-s: 10px;
       --shadow: 0 12px 32px rgba(15, 32, 56, 0.12);
+      --shadow-s: 0 4px 12px rgba(15, 32, 56, 0.06);
       --container: min(1140px, 92vw);
+      --transition: 0.2s ease;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1421;
+        --bg-2: #111c2e;
+        --ink: #e4edf5;
+        --ink-2: #c4d4e8;
+        --muted: #7f92aa;
+        --line: #1e2d44;
+        --panel: #0f1a2a;
+        --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        --shadow-s: 0 4px 12px rgba(0, 0, 0, 0.25);
+      }
     }
 
     * { box-sizing: border-box; }
@@ -31,6 +54,7 @@
         radial-gradient(circle at 5% 5%, rgba(0,122,136,0.16), transparent 38%),
         radial-gradient(circle at 100% 95%, rgba(255,123,84,0.13), transparent 35%),
         var(--bg);
+      transition: background var(--transition), color var(--transition);
     }
 
     .container { width: var(--container); margin: 0 auto; }
@@ -42,6 +66,10 @@
       border-bottom: 1px solid var(--line);
       backdrop-filter: blur(8px);
       background: rgba(238, 243, 251, 0.86);
+      transition: background 0.3s, border-color var(--transition);
+    }
+    @media (prefers-color-scheme: dark) {
+      .topbar { background: rgba(11, 20, 33, 0.88); }
     }
 
     .topbar-row {
@@ -58,6 +86,7 @@
       gap: 10px;
       font-weight: 800;
       letter-spacing: -0.2px;
+      font-size: 1.05rem;
     }
 
     .brand-dot {
@@ -80,39 +109,37 @@
       align-items: center;
       justify-content: center;
       text-decoration: none;
-      border-radius: 10px;
+      border-radius: var(--radius-s);
       padding: 10px 13px;
       font-size: 13px;
       font-weight: 700;
       border: 1px solid transparent;
-      transition: transform 0.14s ease, filter 0.14s ease;
+      transition: transform 0.14s ease, filter 0.14s ease, box-shadow 0.14s ease;
       white-space: nowrap;
+      cursor: pointer;
     }
-
     .btn:hover { transform: translateY(-1px); filter: brightness(1.03); }
+    .btn:focus-visible { outline: 3px solid var(--teal-2); outline-offset: 2px; }
 
     .btn-primary {
       color: #fff;
       background: linear-gradient(120deg, var(--teal-1), var(--teal-2));
       box-shadow: 0 8px 20px rgba(0,122,136,0.24);
     }
-
     .btn-accent {
       color: #fff;
       background: linear-gradient(120deg, #f06d48, var(--orange));
       box-shadow: 0 8px 20px rgba(240,109,72,0.25);
     }
-
     .btn-ghost {
       color: var(--ink);
       border-color: var(--line);
-      background: #fff;
+      background: var(--panel);
     }
 
     .hero {
       padding: 54px 0 32px;
     }
-
     .hero-grid {
       display: grid;
       gap: 18px;
@@ -128,7 +155,6 @@
       padding: 30px 26px;
       box-shadow: var(--shadow);
     }
-
     .eyebrow {
       display: inline-block;
       font-size: 11px;
@@ -138,14 +164,12 @@
       color: #d6f7f2;
       margin-bottom: 10px;
     }
-
     .hero-main h1 {
       margin: 0;
       font-size: clamp(1.8rem, 4vw, 2.6rem);
       letter-spacing: -0.5px;
       line-height: 1.1;
     }
-
     .hero-main p {
       margin: 14px 0 20px;
       max-width: 720px;
@@ -153,7 +177,6 @@
       line-height: 1.65;
       color: rgba(255, 255, 255, 0.9);
     }
-
     .hero-cta {
       display: flex;
       gap: 10px;
@@ -170,21 +193,19 @@
       gap: 10px;
       align-content: start;
     }
-
     .mini {
       border: 1px solid var(--line);
-      background: #f8fbff;
+      background: var(--bg-2);
       border-radius: 12px;
       padding: 11px;
+      transition: background var(--transition);
     }
-
     .mini b {
       display: block;
       font-size: 13px;
       margin-bottom: 4px;
       color: var(--ink);
     }
-
     .mini span {
       color: var(--muted);
       font-size: 12.5px;
@@ -194,18 +215,25 @@
     .section {
       padding: 10px 0 14px;
     }
-
     .section h2 {
       margin: 0 0 12px;
       font-size: 1.25rem;
       letter-spacing: -0.2px;
     }
-
     .section-intro {
       color: var(--muted);
       margin: 0 0 14px;
       font-size: 14px;
       line-height: 1.6;
+    }
+    .section-intro code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 12px;
+      background: var(--bg-2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      color: var(--teal-2);
     }
 
     .view-grid {
@@ -213,17 +241,18 @@
       gap: 14px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
     .view-card {
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      background: #fff;
+      background: var(--panel);
       padding: 18px;
-      box-shadow: 0 8px 22px rgba(15, 32, 56, 0.08);
+      box-shadow: var(--shadow-s);
       display: flex;
       flex-direction: column;
       gap: 10px;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
     }
+    .view-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
 
     .tag {
       display: inline-block;
@@ -236,7 +265,6 @@
       padding: 4px 9px;
       color: #fff;
     }
-
     .tag.dashboard { background: var(--teal-2); }
     .tag.sim3d { background: var(--orange); }
 
@@ -245,7 +273,6 @@
       font-size: 1.08rem;
       letter-spacing: -0.2px;
     }
-
     .view-card p {
       margin: 0;
       color: var(--muted);
@@ -258,17 +285,16 @@
       gap: 12px;
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-
     .feature {
       border: 1px solid var(--line);
       border-radius: 12px;
-      background: #f8fbff;
+      background: var(--bg-2);
       padding: 14px;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.55;
+      transition: background var(--transition), border-color var(--transition);
     }
-
     .feature b {
       display: block;
       color: var(--ink);
@@ -279,11 +305,11 @@
     .flow {
       border: 1px solid var(--line);
       border-radius: 12px;
-      background: #f8fbff;
+      background: var(--bg-2);
       padding: 14px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 12px;
-      color: #355071;
+      color: var(--ink-2);
       line-height: 1.6;
       white-space: pre-wrap;
     }
@@ -293,39 +319,27 @@
       gap: 12px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-
     .cmd {
       border: 1px solid var(--line);
       border-radius: 12px;
-      background: #f8fbff;
+      background: var(--bg-2);
       padding: 12px;
     }
-
     .cmd .k {
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       font-weight: 800;
-      color: #2d486b;
+      color: var(--ink-2);
       margin-bottom: 7px;
     }
-
     .cmd code {
       display: block;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
       font-size: 12px;
-      color: #1d3656;
+      color: var(--ink-2);
       white-space: pre-wrap;
       line-height: 1.55;
-    }
-
-    .footer {
-      margin-top: 18px;
-      border-top: 1px solid var(--line);
-      padding: 18px 0 34px;
-      color: var(--muted);
-      font-size: 12.5px;
-      text-align: center;
     }
 
     .metric-grid {
@@ -334,24 +348,23 @@
       grid-template-columns: repeat(4, minmax(0, 1fr));
       margin-bottom: 14px;
     }
-
     .metric {
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 12px;
-      background: #fff;
-      box-shadow: 0 8px 22px rgba(15, 32, 56, 0.08);
+      background: var(--panel);
+      box-shadow: var(--shadow-s);
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
     }
-
+    .metric:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
     .metric .k {
       font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      color: #395272;
+      color: var(--muted);
       margin-bottom: 5px;
     }
-
     .metric .v {
       font-size: 1.1rem;
       font-weight: 800;
@@ -364,35 +377,55 @@
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-items: start;
     }
-
     .result-card {
       border: 1px solid var(--line);
       border-radius: 12px;
-      background: #fff;
+      background: var(--panel);
       padding: 12px;
-      box-shadow: 0 8px 22px rgba(15, 32, 56, 0.08);
+      box-shadow: var(--shadow-s);
       align-self: start;
+      transition: transform 0.14s ease, box-shadow 0.14s ease;
     }
-
+    .result-card:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
     .result-card h3 {
       margin: 0 0 8px;
       font-size: 0.98rem;
       letter-spacing: -0.1px;
     }
-
     .result-card img {
       width: 100%;
-      border-radius: 10px;
+      border-radius: var(--radius-s);
       border: 1px solid var(--line);
-      background: #f7faff;
+      background: var(--bg-2);
       display: block;
+      aspect-ratio: 16 / 9;
+      object-fit: contain;
+    }
+
+    .footer {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding: 18px 0 34px;
+      color: var(--muted);
+      font-size: 12.5px;
+      text-align: center;
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-2) 25%, var(--bg) 50%, var(--bg-2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
 
     @media (max-width: 980px) {
       .hero-grid { grid-template-columns: 1fr; }
       .feature-grid { grid-template-columns: 1fr 1fr; }
     }
-
     @media (max-width: 760px) {
       .topbar-row { min-height: 58px; }
       .hero { padding-top: 26px; }
@@ -404,7 +437,6 @@
       .result-grid { grid-template-columns: 1fr; }
       .section h2 { font-size: 1.12rem; }
     }
-
     @media (max-width: 520px) {
       .topbar-row {
         padding: 10px 0;
@@ -420,14 +452,26 @@
       .metric-grid { grid-template-columns: 1fr; }
       .section-intro { font-size: 13px; }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    @media print {
+      .topbar { position: static; }
+      .btn { display: none; }
+    }
   </style>
 </head>
 <body>
   <header class="topbar">
     <div class="container topbar-row">
       <div class="brand"><span class="brand-dot"></span>AeroPath RL</div>
-      <nav class="top-actions">
-        <a class="btn btn-ghost" href="/">Home</a>
+      <nav class="top-actions" aria-label="Main navigation">
+        <a class="btn btn-ghost" href="/" aria-current="page">Home</a>
         <a class="btn btn-primary" href="/dashboard.html">Dashboard</a>
         <a class="btn btn-accent" href="/simulation3d.html">3D View</a>
       </nav>
@@ -481,7 +525,6 @@
           <p>Inspect KPIs, reward and step curves, checkpoint progress, and system parameters from recent evaluation outputs.</p>
           <a class="btn btn-primary" href="/dashboard.html">Go to Dashboard</a>
         </article>
-
         <article class="view-card">
           <span class="tag sim3d">Simulation</span>
           <h3>3D Trajectory Viewer</h3>
@@ -539,32 +582,32 @@
       <p class="section-intro">Imported from <code>notebooks/analysis.ipynb</code>: Reward Curve, Reward Component Breakdown, 3D Trajectory, Distance-Sensor Heat-map, and Evaluation Summary.</p>
 
       <div class="metric-grid">
-        <div class="metric"><div class="k">Success Rate</div><div class="v" id="m-success">-</div></div>
-        <div class="metric"><div class="k">Collision Rate</div><div class="v" id="m-collision">-</div></div>
-        <div class="metric"><div class="k">Mean Reward</div><div class="v" id="m-reward">-</div></div>
-        <div class="metric"><div class="k">Mean Steps</div><div class="v" id="m-steps">-</div></div>
+        <div class="metric"><div class="k">Success Rate</div><div class="v" id="m-success"><span class="skeleton" style="display:inline-block;width:50px">&nbsp;</span></div></div>
+        <div class="metric"><div class="k">Collision Rate</div><div class="v" id="m-collision"><span class="skeleton" style="display:inline-block;width:50px">&nbsp;</span></div></div>
+        <div class="metric"><div class="k">Mean Reward</div><div class="v" id="m-reward"><span class="skeleton" style="display:inline-block;width:60px">&nbsp;</span></div></div>
+        <div class="metric"><div class="k">Mean Steps</div><div class="v" id="m-steps"><span class="skeleton" style="display:inline-block;width:50px">&nbsp;</span></div></div>
       </div>
 
       <div class="result-grid">
         <article class="result-card">
           <h3>Reward Curve</h3>
-          <img src="/eval_results/notebook_reward_curve.png" alt="Reward curve from notebook analysis" />
+          <img src="/eval_results/notebook_reward_curve.png" alt="Reward curve from notebook analysis" loading="lazy" />
         </article>
         <article class="result-card">
           <h3>Reward Component Breakdown</h3>
-          <img src="/eval_results/notebook_reward_components.png" alt="Reward component breakdown from notebook analysis" />
+          <img src="/eval_results/notebook_reward_components.png" alt="Reward component breakdown" loading="lazy" />
         </article>
         <article class="result-card">
           <h3>3D Flight Trajectory</h3>
-          <img src="/eval_results/notebook_trajectory_3d.png" alt="3D flight trajectory plot from notebook analysis" />
+          <img src="/eval_results/notebook_trajectory_3d.png" alt="3D flight trajectory plot" loading="lazy" />
         </article>
         <article class="result-card">
           <h3>Distance-Sensor Heat-map</h3>
-          <img src="/eval_results/notebook_sensor_heatmap.png" alt="Distance sensor heat map from notebook analysis" />
+          <img src="/eval_results/notebook_sensor_heatmap.png" alt="Distance sensor heat map" loading="lazy" />
         </article>
         <article class="result-card">
           <h3>Evaluation Summary</h3>
-          <img src="/eval_results/notebook_eval_summary.png" alt="Evaluation summary chart from notebook analysis" />
+          <img src="/eval_results/notebook_eval_summary.png" alt="Evaluation summary chart" loading="lazy" />
         </article>
       </div>
     </section>
@@ -577,7 +620,7 @@
     (async () => {
       try {
         const res = await fetch('/eval_results/eval_stats.json', { cache: 'no-store' });
-        if (!res.ok) return;
+        if (!res.ok) { renderFallback(); return; }
         const s = await res.json();
         const pct = (v) => `${(Number(v || 0) * 100).toFixed(1)}%`;
         const num = (v, d = 2) => Number(v || 0).toFixed(d);
@@ -585,8 +628,14 @@
         document.getElementById('m-collision').textContent = pct(s.collision_rate);
         document.getElementById('m-reward').textContent = num(s.mean_reward, 2);
         document.getElementById('m-steps').textContent = num(s.mean_steps, 2);
-      } catch (e) {
-        // Keep defaults when stats are unavailable.
+      } catch {
+        renderFallback();
+      }
+      function renderFallback() {
+        document.getElementById('m-success').textContent = '—';
+        document.getElementById('m-collision').textContent = '—';
+        document.getElementById('m-reward').textContent = '—';
+        document.getElementById('m-steps').textContent = '—';
       }
     })();
   </script>
