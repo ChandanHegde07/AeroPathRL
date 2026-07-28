@@ -228,7 +228,7 @@ Then open: `http://localhost:8000/dashboard.html`
 | `ent_coef` | Entropy coefficient | 0.01 |
 | `net_arch` | Network architecture | [256, 256] |
 | `n_envs` | Number of parallel environments | 1 |
-| `use_curriculum` | Enable curriculum learning | False |
+| `use_curriculum` | Enable curriculum learning | True |
 
 ## Results & Evaluation
 

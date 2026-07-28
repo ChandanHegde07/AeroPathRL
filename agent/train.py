@@ -35,9 +35,10 @@ console = Console()
 
 
 class DroneTrainingCallback(BaseCallback):
-    def __init__(self, log_freq: int = 1000, verbose: int = 0):
+    def __init__(self, log_freq: int = 1000, train_cfg: TrainingConfig | None = None, verbose: int = 0):
         super().__init__(verbose)
         self.log_freq = log_freq
+        self.train_cfg = train_cfg
         self._episode_rewards: list[float] = []
         self._goal_count  = 0
         self._crash_count = 0
@@ -62,7 +63,27 @@ class DroneTrainingCallback(BaseCallback):
             self.logger.record("drone/mean_episode_reward_50", mean_r)
             self.logger.record("drone/goal_rate",    self._goal_count / total)
             self.logger.record("drone/collision_rate", self._crash_count / total)
+
+        if self.train_cfg and self.train_cfg.use_curriculum:
+            self._update_curriculum()
         return True
+
+    def _update_curriculum(self):
+        timestep = self.n_calls
+        env = self.training_env
+        if env is None:
+            return
+        for stage in reversed(self.train_cfg.curriculum_stages):
+            if timestep >= stage["timesteps"]:
+                target = stage["target_distance"]
+                n_obs  = stage["num_obstacles"]
+                break
+        else:
+            return
+        env_method = getattr(env, "env_method", None)
+        if env_method is None:
+            return
+        env_method("set_curriculum", target_distance=target, num_obstacles=n_obs)
 
 
 
@@ -206,7 +227,7 @@ class DroneTrainer:
             render=False,
             verbose=1,
         )
-        custom_cb = DroneTrainingCallback(log_freq=1000)
+        custom_cb = DroneTrainingCallback(log_freq=1000, train_cfg=tc)
         return CallbackList([checkpoint_cb, eval_cb, custom_cb])
 
     def _print_header(self):
@@ -220,6 +241,7 @@ class DroneTrainer:
             ("Batch size",     str(self.train_cfg.batch_size)),
             ("N epochs",       str(self.train_cfg.n_epochs)),
             ("Net arch",       str(self.train_cfg.net_arch)),
+            ("Curriculum",     "On" if self.train_cfg.use_curriculum else "Off"),
             ("Target pos",     str(self.env_cfg.target_position)),
             ("Max velocity",   f"{self.env_cfg.max_velocity} m/s"),
         ]

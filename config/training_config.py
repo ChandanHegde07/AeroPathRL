@@ -39,7 +39,7 @@ class TrainingConfig:
 
     device: str = "auto"
 
-    use_curriculum: bool = False
+    use_curriculum: bool = True
     curriculum_stages: list = field(default_factory=lambda: [
         {"timesteps": 0,        "target_distance": 10.0, "num_obstacles": 2},
         {"timesteps": 200_000,  "target_distance": 20.0, "num_obstacles": 5},

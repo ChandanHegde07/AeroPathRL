@@ -45,9 +45,6 @@ eval_results/
 !eval_results/eval_stats.json
 !eval_results/trajectories.csv
 
-# AirSim / simulation local artifacts
-simulations/environments/
-
 # Environment / local config
 .env
 .env.*

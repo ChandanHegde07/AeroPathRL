@@ -161,6 +161,12 @@ class DroneNavigationEnv(gym.Env):
         self._goal_tolerance = cfg.goal_tolerance
         self._max_steps = cfg.max_steps_per_episode
         self._obstacles: List[Tuple[float, float, float, float]] = []
+        self._curriculum_target_distance: float | None = None
+        self._curriculum_num_obstacles: int | None = None
+
+    def set_curriculum(self, target_distance: float, num_obstacles: int):
+        self._curriculum_target_distance = target_distance
+        self._curriculum_num_obstacles = num_obstacles
 
     def reset(
         self,
@@ -179,6 +185,9 @@ class DroneNavigationEnv(gym.Env):
             50,
             int(self.cfg.max_steps_per_episode * self._difficulty["max_steps_scale"]),
         )
+
+        if self._curriculum_target_distance is not None:
+            self._goal_tolerance = self._curriculum_target_distance * 0.2
 
         self._client.reset()
         self._client.enableApiControl(True)
@@ -225,7 +234,14 @@ class DroneNavigationEnv(gym.Env):
 
         collided = col_info.has_collided or self._collides_with_obstacle(curr_pos)
         oob = self._is_out_of_bounds(curr_pos)
-        goal = self._dist(curr_pos, self.cfg.target_position) < self._goal_tolerance
+        target = self.cfg.target_position
+        if self._curriculum_target_distance is not None:
+            spawn = self.cfg.spawn_position
+            current_dir = np.array([target[i] - spawn[i] for i in range(3)])
+            if np.linalg.norm(current_dir) > 1e-8:
+                current_dir = current_dir / np.linalg.norm(current_dir)
+            target = tuple(spawn[i] + current_dir[i] * self._curriculum_target_distance for i in range(3))
+        goal = self._dist(curr_pos, target) < self._goal_tolerance
 
         reward, r_info = self._reward_fn.compute(
             curr_pos,
@@ -296,11 +312,15 @@ class DroneNavigationEnv(gym.Env):
         return DIFFICULTY_PRESETS.get(level, DIFFICULTY_PRESETS["medium"])
 
     def _spawn_obstacles(self) -> List[Tuple[float, float, float, float]]:
-        if not self.cfg.dynamic_obstacles:
+        if not self.cfg.dynamic_obstacles and self._curriculum_num_obstacles is None:
             return []
 
         density = self._difficulty["obstacle_density"]
-        count = max(0, int(round(self.cfg.num_random_obstacles * density)))
+        count = (
+            self._curriculum_num_obstacles
+            if self._curriculum_num_obstacles is not None
+            else max(0, int(round(self.cfg.num_random_obstacles * density)))
+        )
         if count == 0:
             return []
 
