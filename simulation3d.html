@@ -193,33 +193,79 @@
 
     .tb-btn svg { width: 11px; height: 11px; flex-shrink: 0; }
 
-    /* Range sliders */
-    input[type="range"] {
+    /* Toggle buttons — show pressed/active state clearly */
+    .tb-btn.toggled {
+      background: var(--orange-dim);
+      border-color: var(--border-hi);
+      color: var(--orange-hi);
+      box-shadow: inset 0 0 0 1px rgba(255,80,0,0.35), 0 0 10px rgba(255,80,0,0.2);
+    }
+
+    .tb-btn.toggled:hover {
+      background: rgba(255,80,0,0.3);
+      box-shadow: var(--orange-glow);
+    }
+
+    .tb-btn[disabled] {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    /* Range sliders — filled track with gradation */
+    input[type="range"].tb-range {
       -webkit-appearance: none;
          appearance: none;
-      height: 3px;
-      border-radius: 2px;
-      background: rgba(255,255,255,0.15);
+      height: 6px;
+      border-radius: 4px;
+      background: linear-gradient(90deg,
+        var(--orange) 0%,
+        var(--orange) var(--fill, 100%),
+        rgba(255,255,255,0.14) var(--fill, 100%),
+        rgba(255,255,255,0.14) 100%);
       outline: none;
       cursor: pointer;
       min-width: 80px;
+      transition: box-shadow 0.15s;
     }
 
-    input[type="range"]::-webkit-slider-thumb {
+    input[type="range"].tb-range:focus-visible {
+      box-shadow: 0 0 0 2px rgba(255,80,0,0.35);
+    }
+
+    input[type="range"].tb-range::-webkit-slider-thumb {
       -webkit-appearance: none;
-      width: 14px; height: 14px;
+      width: 15px; height: 15px;
       border-radius: 50%;
-      background: var(--orange);
-      box-shadow: 0 0 8px rgba(255,80,0,0.7);
+      background: radial-gradient(circle at 35% 35%, #fff, var(--orange));
+      box-shadow: 0 0 9px rgba(255,80,0,0.75);
       cursor: pointer;
+      border: none;
+      transition: transform 0.1s;
+    }
+
+    input[type="range"].tb-range::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+    input[type="range"].tb-range::-moz-range-thumb {
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #fff, var(--orange));
+      box-shadow: 0 0 9px rgba(255,80,0,0.75);
+      cursor: pointer;
+      border: none;
     }
 
     .tb-speed-val {
       font-family: var(--font);
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--orange);
-      min-width: 30px;
+      min-width: 32px;
+      text-align: center;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 6px;
     }
 
     .tb-spacer { flex: 1; min-width: 8px; }
@@ -460,6 +506,167 @@
       margin-right: 3px;
     }
 
+    /* ── FPS meter (top-center) ── */
+    .hud-fps {
+      top: 16px; left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+    }
+
+    .fps-ring {
+      width: 34px; height: 34px;
+      position: relative;
+    }
+
+    .fps-ring svg {
+      width: 34px; height: 34px;
+      transform: rotate(-90deg);
+    }
+
+    .fps-ring .track { stroke: rgba(255,255,255,0.1); }
+    .fps-ring .fill {
+      stroke: #00e676;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.3s ease, stroke 0.3s ease;
+    }
+
+    .fps-ring .num {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 800;
+      color: var(--white);
+    }
+
+    .fps-ring .num.low { color: var(--red-hi); }
+    .fps-ring .num.mid { color: var(--orange-hi); }
+
+    .fps-graph {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 26px;
+      width: 90px;
+    }
+
+    .fps-graph i {
+      flex: 1;
+      background: linear-gradient(180deg, var(--orange-hi), var(--red));
+      border-radius: 1px;
+      opacity: 0.85;
+      min-height: 1px;
+      align-self: flex-end;
+    }
+
+    /* ── Toasts (bottom-center) ── */
+    #toasts {
+      position: absolute;
+      bottom: 16px; left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(12,12,12,0.92);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--orange);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--white-dim);
+      box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      max-width: 70vw;
+    }
+
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { border-left-color: #00e676; }
+    .toast.warn    { border-left-color: var(--orange); }
+    .toast.error   { border-left-color: var(--red); }
+
+    /* ── HUD visibility state ── */
+    body.hud-hidden .hud { opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s; }
+    body:not(.hud-hidden) .hud { opacity: 1; visibility: visible; transition: opacity 0.25s ease, visibility 0s; }
+
+    /* ── Panels: lifted depth + entrance ── */
+    .hud-panel {
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+      animation: hudIn 0.4s ease backwards;
+    }
+
+    .hud-telem   { animation-delay: 0.05s; }
+    .hud-ep      { animation-delay: 0.1s; }
+    .hud-legend  { animation-delay: 0.15s; }
+    .hud-hint    { animation-delay: 0.2s; }
+
+    @keyframes hudIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Prev / Next episode arrows on the episode HUD */
+    .hud-ep-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .hud-ep-arrow {
+      pointer-events: auto;
+      background: var(--white-faint);
+      border: 1px solid var(--border);
+      color: var(--white-dim);
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .hud-ep-arrow:hover { background: rgba(255,255,255,0.2); color: var(--white); border-color: var(--border-hi); }
+    .hud-ep-arrow:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+    /* Spawn/Target quick-zoom chips on the hint panel */
+    .hud-view-chips {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      pointer-events: auto;
+      background: var(--white-faint);
+      border: 1px solid var(--border);
+      color: var(--white-dim);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .chip:hover { background: var(--orange-dim); border-color: var(--border-hi); color: var(--orange-hi); }
+
     /* ══════════════════════════════
        ANIMATIONS
     ══════════════════════════════ */
@@ -482,13 +689,15 @@
       .tb-label { display: none; }
       .hud-telem { min-width: 180px; }
       .hud-ep-num { font-size: 26px; }
+      .fps-graph { width: 54px; }
     }
 
     @media (max-width: 600px) {
       .toolbar { padding: 0 8px; gap: 5px; }
-      .hud-telem, .hud-legend { display: none; }
+      .hud-telem, .hud-legend, .hud-fps { display: none; }
       .hud-hint p { font-size: 9px; }
       select { min-width: 88px; }
+      .hud-ep { top: 12px; right: 12px; }
     }
   </style>
 </head>
@@ -507,14 +716,14 @@
 
   <div class="tb-sep"></div>
 
-  <button class="tb-btn primary" id="play-btn">
+  <button class="tb-btn primary" id="play-btn" title="Play / Pause (Space)" aria-label="Play or pause">
     <svg id="play-icon" viewBox="0 0 12 12" fill="currentColor">
       <polygon points="2,1 11,6 2,11"/>
     </svg>
     <span id="play-label">PLAY</span>
   </button>
 
-  <button class="tb-btn danger" id="reset-btn">
+  <button class="tb-btn danger" id="reset-btn" title="Reset episode (R)" aria-label="Reset episode">
     <svg viewBox="0 0 12 12" fill="currentColor">
       <path d="M6 2a4 4 0 1 0 3.46 2H8.27A2.75 2.75 0 1 1 6 3.25V2z"/>
       <polygon points="4,0 8,2 4,4"/>
@@ -526,26 +735,38 @@
 
   <div class="tb-group">
     <span class="tb-label">Step</span>
-    <input id="step-slider" type="range" min="0" max="1" value="0" style="width:100px"/>
+    <input id="step-slider" class="tb-range" type="range" min="0" max="1" value="0" style="width:100px" title="Seek within episode (← →)"/>
   </div>
 
   <div class="tb-group">
     <span class="tb-label">Speed</span>
-    <input id="speed-slider" type="range" min="0.25" max="6" value="1" step="0.25" style="width:70px"/>
+    <input id="speed-slider" class="tb-range" type="range" min="0.25" max="6" value="1" step="0.25" style="width:70px" title="Playback speed"/>
     <span class="tb-speed-val" id="speed-val">1×</span>
   </div>
 
   <div class="tb-sep"></div>
 
-  <button class="tb-btn" id="trail-btn">TRAIL ON</button>
-  <button class="tb-btn" id="ghost-btn">GHOST PATH</button>
+  <div class="tb-group" role="group" aria-label="Display overlays">
+    <button class="tb-btn toggled" id="trail-btn" title="Toggle trail path">TRAIL</button>
+    <button class="tb-btn toggled" id="ghost-btn" title="Toggle ghost path">GHOST</button>
+    <button class="tb-btn toggled" id="hud-btn" title="Toggle HUD (H)">HUD</button>
+  </div>
 
   <div class="tb-spacer"></div>
 
-  <div class="status-pill">
-    <span class="status-dot loading" id="status-dot"></span>
+  <button class="tb-btn" id="fs-btn" title="Toggle fullscreen (F)" aria-label="Toggle fullscreen">
+    <svg id="fs-icon" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M2 4 V2 H4 M8 2 H10 V4 M10 8 V10 H8 M4 10 H2 V8"/>
+    </svg>
+    FULLSCREEN
+  </button>
+
+  <div class="status-pill" title="Application status">
+    <span class="status-dot loading" id="status-dot" role="status" aria-live="polite"></span>
     <span id="status-text">Initialising…</span>
   </div>
+
+  <button class="tb-btn" id="retry-btn" style="display:none">RETRY</button>
 
 </div>
 
@@ -592,9 +813,30 @@
 
   <!-- Episode — top right -->
   <div class="hud hud-ep hud-panel">
+    <div class="hud-ep-controls">
+      <button class="hud-ep-arrow" id="ep-prev" title="Previous episode" aria-label="Previous episode">‹</button>
+      <button class="hud-ep-arrow" id="ep-next" title="Next episode" aria-label="Next episode">›</button>
+    </div>
     <div class="hud-ep-label">Episode</div>
     <div class="hud-ep-num" id="hud-ep-num">—</div>
   </div>
+
+  <!-- FPS meter — top center -->
+  <div class="hud hud-fps hud-panel" title="Rendering performance">
+    <div class="fps-ring">
+      <svg viewBox="0 0 60 60">
+        <circle class="track" cx="30" cy="30" r="26" fill="none" stroke-width="6"/>
+        <circle class="fill" id="fps-fill" cx="30" cy="30" r="26" fill="none" stroke-width="6"
+          stroke-dasharray="163.36" stroke-dashoffset="163.36"/>
+      </svg>
+      <span class="num" id="fps-num">–</span>
+    </div>
+    <span class="tb-label" style="letter-spacing:1px;font-size:9px">FPS</span>
+    <div class="fps-graph" id="fps-graph"></div>
+  </div>
+
+  <!-- Toasts — bottom center -->
+  <div id="toasts"></div>
 
   <!-- Legend — bottom left -->
   <div class="hud hud-legend hud-panel">
@@ -634,6 +876,13 @@
     <p><span class="key">Space</span> Play / Pause</p>
     <p><span class="key">R</span> Reset Episode</p>
     <p><span class="key">← →</span> Step Frame</p>
+    <p><span class="key">H</span> Hide HUD</p>
+    <p><span class="key">F</span> Fullscreen</p>
+    <div class="hud-view-chips">
+      <button class="chip" id="chip-spawn">Spawn</button>
+      <button class="chip" id="chip-target">Target</button>
+      <button class="chip" id="chip-top">Top</button>
+    </div>
   </div>
 
 </div>
@@ -661,25 +910,40 @@ const resetBtn    = $('reset-btn');
 const stepSlider  = $('step-slider');
 const speedSlider = $('speed-slider');
 const speedVal    = $('speed-val');
-const trailBtn    = $('trail-btn');
-const ghostBtn    = $('ghost-btn');
 const statusDot   = $('status-dot');
 const statusText  = $('status-text');
+const retryBtn    = $('retry-btn');
 const wrap        = $('canvas-wrap');
+const trailBtn    = $('trail-btn');
+const ghostBtn    = $('ghost-btn');
+const hudBtn      = $('hud-btn');
+const fsBtn       = $('fs-btn');
+const fsIcon      = $('fs-icon');
+const epPrev      = $('ep-prev');
+const epNext      = $('ep-next');
+const toasts      = $('toasts');
+const fpsFill     = $('fps-fill');
+const fpsNum      = $('fps-num');
+const fpsGraph    = $('fps-graph');
+const chipSpawn   = $('chip-spawn');
+const chipTarget  = $('chip-target');
+const chipTop     = $('chip-top');
 
 /* ─── STATE ─── */
 let episodes = [], currentEp = null, currentStep = 0;
 let playing = false, speed = 1;
-let showTrail = true, showGhost = true;
+let showTrail = true, showGhost = true, showHud = true;
 let THREE, OrbitControls;
 let scene, camera, renderer, controls;
 let droneObj, droneGlow, droneRing;
 let targetBeacon, targetRing1, targetRing2;
-let fullPathLine = null, trailLine = null;
+let fullPathLine = null;
+let trailLine = null, trailPoints = [];
 let obstacleObjs = [];
 let stars;
 let lastTime = performance.now(), accum = 0;
 let cumReward = 0;
+let fpsSamples = [], fpsLast = performance.now(), fpsAccum = 0, fpsCount = 0;
 
 /* ─── LOAD THREE ─── */
 async function importFallback(urls) {
@@ -718,8 +982,8 @@ function buildScene() {
   camera.position.set(24, 20, 34);
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.shadowMap.enabled = true;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.shadowMap.enabled = false;
   wrap.appendChild(renderer.domElement);
 
   controls = new OrbitControls(camera, renderer.domElement);
@@ -733,7 +997,6 @@ function buildScene() {
   scene.add(new THREE.AmbientLight(0xffffff, 0.35));
   const sun = new THREE.DirectionalLight(0xfff4e8, 1.0);
   sun.position.set(25, 40, 15);
-  sun.castShadow = true;
   scene.add(sun);
   // Orange fill light near path centre
   const orangeFill = new THREE.PointLight(0xff5000, 0.7, 70);
@@ -790,7 +1053,6 @@ function buildGround() {
   );
   gp.rotation.x = -Math.PI / 2;
   gp.position.y = -0.15;
-  gp.receiveShadow = true;
   scene.add(gp);
 }
 
@@ -834,7 +1096,6 @@ function buildDrone() {
 
   // Core — white drone
   droneObj = makeSphere(0.5, 0xffffff, 0.6, pos);
-  droneObj.castShadow = true;
   scene.add(droneObj);
 
   // Glow
@@ -876,9 +1137,18 @@ function buildObstacles() {
 }
 
 /* ─── HELPERS ─── */
+const _geomCache  = new Map();   // radius → SphereGeometry
+const _glowCache  = new Map();   // hex-color → { texture, material }
+
+function sphereGeom(r) {
+  let g = _geomCache.get(r);
+  if (!g) { g = new THREE.SphereGeometry(r, 24, 24); _geomCache.set(r, g); }
+  return g;
+}
+
 function makeSphere(r, color, emissiveStr, pos) {
   const m = new THREE.Mesh(
-    new THREE.SphereGeometry(r, 24, 24),
+    sphereGeom(r),
     new THREE.MeshStandardMaterial({
       color, emissive: color,
       emissiveIntensity: emissiveStr * 0.4,
@@ -889,22 +1159,31 @@ function makeSphere(r, color, emissiveStr, pos) {
   return m;
 }
 
-function makeGlowSprite(pos, color, scale) {
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = 128;
-  const ctx = canvas.getContext('2d');
+function glowAssets(color) {
   const hex = '#' + color.toString(16).padStart(6, '0');
-  const grd = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  grd.addColorStop(0,   hex + 'bb');
-  grd.addColorStop(0.4, hex + '44');
-  grd.addColorStop(1,   hex + '00');
-  ctx.fillStyle = grd;
-  ctx.fillRect(0, 0, 128, 128);
-  const tex = new THREE.CanvasTexture(canvas);
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: tex, transparent: true,
-    depthWrite: false, blending: THREE.AdditiveBlending
-  }));
+  let a = _glowCache.get(hex);
+  if (!a) {
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    const grd = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    grd.addColorStop(0,   hex + 'bb');
+    grd.addColorStop(0.4, hex + '44');
+    grd.addColorStop(1,   hex + '00');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 128, 128);
+    const tex = new THREE.CanvasTexture(canvas);
+    a = { texture: tex, material: new THREE.SpriteMaterial({
+      map: tex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    }) };
+    _glowCache.set(hex, a);
+  }
+  return a;
+}
+
+function makeGlowSprite(pos, color, scale) {
+  const { material } = glowAssets(color);
+  const s = new THREE.Sprite(material);
   s.scale.set(scale, scale, 1);
   if (pos) s.position.copy(pos);
   return s;
@@ -916,21 +1195,53 @@ function makeLine(points, color, opacity) {
   return new THREE.Line(geom, mat);
 }
 
-/* Gradient trail: white → orange */
-function makeGradientTrail(points) {
-  const group = new THREE.Group();
-  const n = points.length;
-  for (let i = 0; i < n - 1; i++) {
-    const t = i / Math.max(n - 2, 1);
-    // Interpolate white (255,255,255) → orange (255,80,0)
-    const gr = 255;
-    const gg = Math.round(255 * (1 - t));
-    const gb = Math.round(255 * (1 - t));
-    const color = (gr << 16) | (gg << 8) | gb;
-    const seg = makeLine([points[i], points[i + 1]], color, 0.75 + t * 0.25);
-    group.add(seg);
+/* Gradient trail: white → orange.
+   Rendered as a single persistent Line with per-vertex colors, mutated in
+   place each step (built once with a capacity buffer, then we set the draw
+   range). Removes the per-step Group/Lines/geometries allocation churn. */
+function makeGradientTrail(capacity) {
+  const cap = Math.max(2, capacity | 0);
+  const positions = new Float32Array(cap * 3);
+  const colors    = new Float32Array(cap * 3);
+
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geom.setAttribute('color',    new THREE.BufferAttribute(colors, 3));
+  geom.setDrawRange(0, 0);
+
+  const mat = new THREE.LineBasicMaterial({
+    vertexColors: true, transparent: true, linewidth: 2
+  });
+
+  const line = new THREE.Line(geom, mat);
+  line.frustumCulled = false;
+  return line;
+}
+
+/* Update a persistent trail line to cover the current set of points. */
+function trailSetPoints(line, points, count) {
+  const n = Math.min(points.length, count);
+  if (n <= 0) { line.geometry.setDrawRange(0, 0); return; }
+
+  const posAttr = line.geometry.attributes.position;
+  const colAttr = line.geometry.attributes.color;
+
+  if (posAttr.count < n) {
+    posAttr.setArray(new Float32Array(n * 3));
+    colAttr.setArray(new Float32Array(n * 3));
   }
-  return group;
+
+  for (let i = 0; i < n; i++) {
+    const p = points[i];
+    posAttr.setXYZ(i, p.x, p.y, p.z);
+
+    const t = n <= 1 ? 0 : i / (n - 1);
+    const gb = Math.round(255 * (1 - t));
+    colAttr.setXYZ(i, 1, gb / 255, gb / 255);
+  }
+  posAttr.needsUpdate = true;
+  colAttr.needsUpdate = true;
+  line.geometry.setDrawRange(0, n);
 }
 
 /* ─── DATA ─── */
@@ -952,7 +1263,14 @@ function buildEpisodes(rows) {
   const m = new Map();
   rows.forEach(r => { if (!m.has(r.episode)) m.set(r.episode, []); m.get(r.episode).push(r); });
   return [...m.entries()].sort((a, b) => a[0] - b[0])
-    .map(([ep, steps]) => ({ ep, steps: steps.sort((a, b) => a.step - b.step) }));
+    .map(([ep, steps]) => {
+      steps = steps.sort((a, b) => a.step - b.step);
+      // Prefix sums → O(1) cumulative reward lookups
+      const cumRewards = new Float64Array(steps.length);
+      let acc = 0;
+      steps.forEach((s, i) => { acc += Number(s.reward || 0); cumRewards[i] = acc; });
+      return { ep, steps, cumRewards };
+    });
 }
 
 function epPoints(ep) {
@@ -974,15 +1292,26 @@ function loadEp(idx) {
   stepSlider.min   = '0';
   stepSlider.max   = String(Math.max(1, ep.steps.length - 1));
   stepSlider.value = '0';
+  fillSlider(stepSlider);
 
   $('hud-ep-num').innerHTML = ep.ep;
+
+  // Episode arrow states
+  epPrev.disabled = idx <= 0;
+  epNext.disabled = idx >= episodes.length - 1;
 
   if (fullPathLine) scene.remove(fullPathLine);
   if (showGhost) {
     fullPathLine = makeLine(epPoints(ep), 0x333333, 0.5);
     scene.add(fullPathLine);
   }
-  if (trailLine) { scene.remove(trailLine); trailLine = null; }
+  if (trailLine) scene.remove(trailLine);
+  trailLine   = null;
+  trailPoints = epPoints(ep);
+  if (showTrail) {
+    trailLine = makeGradientTrail(trailPoints.length);
+    scene.add(trailLine);
+  }
   updateStep(0);
 }
 
@@ -998,17 +1327,12 @@ function updateStep(step) {
   droneGlow.position.copy(pos);
   droneRing.position.copy(pos);
 
-  // Trail
-  if (trailLine) scene.remove(trailLine);
-  if (showTrail) {
-    const pts = epPoints(currentEp).slice(0, i + 1);
-    if (pts.length >= 2) {
-      trailLine = makeGradientTrail(pts);
-      scene.add(trailLine);
-    }
-  }
+  // Trail — mutate persistent gradient line in place
+  const trailVisible = showTrail && trailLine;
+  if (trailLine) trailLine.visible = trailVisible;
+  if (trailVisible) trailSetPoints(trailLine, trailPoints, i + 1);
 
-  cumReward = currentEp.steps.slice(0, i + 1).reduce((a, r) => a + Number(r.reward || 0), 0);
+  cumReward = currentEp.cumRewards[i];
 
   const tPos = ned2three(TARGET_NED.x, TARGET_NED.y, TARGET_NED.z);
   const d    = dist3(pos, tPos).toFixed(2);
@@ -1038,6 +1362,67 @@ function setStatus(msg, state = 'ok') {
   statusDot.className = 'status-dot' + (state === 'ok' ? '' : state === 'loading' ? ' loading' : ' error');
 }
 
+/* ─── TOASTS ─── */
+function toast(msg, type = 'warn') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = msg;
+  toasts.appendChild(el);
+  if (toasts.children.length > 4) toasts.firstElementChild.remove();
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), 300);
+  }, 2600);
+}
+
+/* ─── RANGE SLIDER FILL ─── */
+function fillSlider(slider) {
+  const min = parseFloat(slider.min), max = parseFloat(slider.max);
+  const pct = ((slider.value - min) / (max - min)) * 100;
+  slider.style.setProperty('--fill', pct + '%');
+}
+
+/* ─── FPS METER ─── */
+const FPS_RING_C = 2 * Math.PI * 26; // circumference of 26r ring
+function sampleFPS(now) {
+  fpsAccum += now - fpsLast;
+  fpsLast   = now;
+  fpsCount++;
+  if (fpsAccum < 500) return;
+  const fps = Math.round((fpsCount * 1000) / fpsAccum);
+  fpsAccum = 0; fpsCount = 0;
+
+  fpsSamples.push(fps);
+  if (fpsSamples.length > 30) fpsSamples.shift();
+
+  const pct = Math.min(100, Math.max(0, (fps / 60) * 100));
+  fpsFill.style.strokeDashoffset = String(FPS_RING_C * (1 - pct / 100));
+  fpsNum.textContent = fps;
+  fpsNum.className = 'num' + (fps < 30 ? ' low' : fps < 50 ? ' mid' : '');
+
+  fpsGraph.innerHTML = fpsSamples.map(f => {
+    const h = Math.max(3, (f / 60) * 26);
+    return `<i style="height:${h.toFixed(1)}px" title="${f} fps"></i>`;
+  }).join('');
+}
+
+/* ─── HUD SHOW/HIDE ─── */
+function setHud(on) {
+  showHud = on;
+  document.body.classList.toggle('hud-hidden', !on);
+  hudBtn.classList.toggle('toggled', on);
+}
+
+/* ─── FULLSCREEN ─── */
+function toggleFullscreen() {
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    wrap.requestFullscreen && wrap.requestFullscreen();
+  }
+}
+
 /* ─── RESIZE ─── */
 function resize() {
   const w = wrap.clientWidth, h = wrap.clientHeight;
@@ -1056,12 +1441,18 @@ function tick(now) {
     while (accum >= 0.042) {
       accum -= 0.042;
       const next = currentStep + 1;
-      if (next >= currentEp.steps.length) { playing = false; setPlayState(false); break; }
+      if (next >= currentEp.steps.length) {
+        playing = false; setPlayState(false);
+        document.dispatchEvent(new Event('episodeEnd'));
+        break;
+      }
       updateStep(next);
     }
   } else {
     accum = 0;
   }
+
+  sampleFPS(now);
 
   const t = now * 0.001;
 
@@ -1114,13 +1505,29 @@ function setPlayState(p) {
 }
 
 /* ─── DATA LOAD ─── */
+let _rowsCache = null;
+
+function showRetry(on) {
+  retryBtn.style.display = on ? '' : 'none';
+  if (on) retryBtn.classList.add('primary');
+}
+
 async function loadData() {
   setStatus('Loading trajectories…', 'loading');
-  const res = await fetch('eval_results/trajectories.csv');
-  if (!res.ok) throw new Error('Cannot fetch eval_results/trajectories.csv');
-  const rows = parseCSV(await res.text());
-  episodes   = buildEpisodes(rows);
-  if (!episodes.length) throw new Error('No episodes in CSV');
+  showRetry(false);
+  let rows;
+  if (_rowsCache) {
+    // Use cached parsed rows — no refetch on retry
+    rows = _rowsCache;
+  } else {
+    const res = await fetch('eval_results/trajectories.csv', { cache: 'no-store' });
+    if (!res.ok) throw new Error('Cannot fetch eval_results/trajectories.csv');
+    _rowsCache = parseCSV(await res.text());
+    rows = _rowsCache;
+  }
+  const eps = buildEpisodes(rows);
+  if (!eps.length) { _rowsCache = null; throw new Error('No episodes in CSV'); }
+  episodes = eps;
 
   epSel.innerHTML = episodes.map((e, i) => `<option value="${i}">Episode ${e.ep}</option>`).join('');
   loadEp(0);
@@ -1133,47 +1540,115 @@ playBtn.addEventListener('click', () => {
   setPlayState(!playing);
 });
 
-resetBtn.addEventListener('click', () => { setPlayState(false); updateStep(0); });
+resetBtn.addEventListener('click', () => {
+  setPlayState(false);
+  updateStep(0);
+  toast('Episode reset', 'warn');
+});
 
 epSel.addEventListener('change', () => { setPlayState(false); loadEp(+epSel.value); });
 
-stepSlider.addEventListener('input', () => { setPlayState(false); updateStep(+stepSlider.value); });
+stepSlider.addEventListener('input', () => { setPlayState(false); updateStep(+stepSlider.value); fillSlider(stepSlider); });
 
 speedSlider.addEventListener('input', () => {
   speed = +speedSlider.value || 1;
   speedVal.textContent = speed + '×';
+  fillSlider(speedSlider);
 });
 
 trailBtn.addEventListener('click', () => {
   showTrail = !showTrail;
-  trailBtn.textContent = showTrail ? 'TRAIL ON' : 'TRAIL OFF';
-  if (!showTrail && trailLine) { scene.remove(trailLine); trailLine = null; }
-  else if (showTrail && currentEp) updateStep(currentStep);
+  trailBtn.classList.toggle('toggled', showTrail);
+  if (showTrail && currentEp && !trailLine) {
+    trailPoints = epPoints(currentEp);
+    trailLine   = makeGradientTrail(trailPoints.length);
+    scene.add(trailLine);
+  }
+  updateStep(currentStep);
 });
 
 ghostBtn.addEventListener('click', () => {
   showGhost = !showGhost;
-  ghostBtn.textContent = showGhost ? 'GHOST PATH' : 'GHOST OFF';
+  ghostBtn.classList.toggle('toggled', showGhost);
   if (!showGhost && fullPathLine) { scene.remove(fullPathLine); fullPathLine = null; }
   else if (showGhost && currentEp) { fullPathLine = makeLine(epPoints(currentEp), 0x333333, 0.5); scene.add(fullPathLine); }
 });
 
+hudBtn.addEventListener('click', () => setHud(!showHud));
+
+fsBtn.addEventListener('click', () => toggleFullscreen());
+document.addEventListener('fullscreenchange', () => {
+  fsBtn.classList.toggle('toggled', !!document.fullscreenElement);
+});
+
+/* Episode arrows */
+epPrev.addEventListener('click', () => {
+  if (epSel.selectedIndex > 0) { epSel.selectedIndex--; epSel.dispatchEvent(new Event('change')); }
+});
+epNext.addEventListener('click', () => {
+  if (epSel.selectedIndex < epSel.options.length - 1) { epSel.selectedIndex++; epSel.dispatchEvent(new Event('change')); }
+});
+
+/* Camera quick views */
+function aimCamera(fn) {
+  if (!controls) return;
+  setPlayState(false);
+  fn();
+  controls.enableDamping = false;
+  controls.update();
+  controls.enableDamping = true;
+}
+chipSpawn.addEventListener('click', () => aimCamera(() => {
+  const p = ned2three(SPAWN_NED.x, SPAWN_NED.y, SPAWN_NED.z);
+  controls.target.copy(p); camera.position.set(p.x + 10, p.y + 6, p.z + 12);
+}));
+chipTarget.addEventListener('click', () => aimCamera(() => {
+  const p = ned2three(TARGET_NED.x, TARGET_NED.y, TARGET_NED.z);
+  controls.target.copy(p); camera.position.set(p.x + 14, p.y + 10, p.z - 12);
+}));
+chipTop.addEventListener('click', () => aimCamera(() => {
+  controls.target.set(15, 5, 0); camera.position.set(15, 45, 0);
+}));
+
 window.addEventListener('keydown', e => {
   if (e.code === 'Space')      { e.preventDefault(); playBtn.click(); }
   if (e.code === 'KeyR')       { e.preventDefault(); resetBtn.click(); }
+  if (e.code === 'KeyH')       { setHud(!showHud); }
+  if (e.code === 'KeyF')       { toggleFullscreen(); }
+  if (e.code === 'PageUp')     { epNext.dispatchEvent(new Event('click')); }
+  if (e.code === 'PageDown')   { epPrev.dispatchEvent(new Event('click')); }
   if (e.code === 'ArrowRight' && currentEp) { setPlayState(false); updateStep(Math.min(currentStep + 1, currentEp.steps.length - 1)); }
   if (e.code === 'ArrowLeft'  && currentEp) { setPlayState(false); updateStep(Math.max(currentStep - 1, 0)); }
 });
 
 window.addEventListener('resize', resize);
 
+retryBtn.addEventListener('click', () => {
+  loadData().catch(err => {
+    setStatus('Run: python3 -m http.server  —  ' + err.message, 'error');
+    showRetry(true);
+  });
+});
+
+/* ─── PLAYBACK-END NOTIFICATION ─── */
+const _endCumReward = () => currentEp ? currentEp.cumRewards[currentEp.cumRewards.length - 1] : 0;
+document.addEventListener('episodeEnd', () => {
+  const r = _endCumReward();
+  toast('Episode complete — total reward <b style="color:#4cff8a">' + r.toFixed(1) + '</b>', 'success');
+});
+
 /* ─── INIT ─── */
 await loadThree();
 buildScene();
 resize();
+fillSlider(stepSlider);
+fillSlider(speedSlider);
+setHud(true);
+fpsFill.style.strokeDasharray = String(FPS_RING_C);
 requestAnimationFrame(tick);
 loadData().catch(err => {
   setStatus('Run: python3 -m http.server  —  ' + err.message, 'error');
+  showRetry(true);
 });
 </script>
 
