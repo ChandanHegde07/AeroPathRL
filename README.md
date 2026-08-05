@@ -2,7 +2,7 @@
 
 ![ ](screenshots/README%20-%201.png)
 
-AeroPath RL is an autonomous drone navigation project using reinforcement learning. The agent is trained to fly from spawn to target in 3D space while avoiding collisions using PPO with a local simulator backend.
+AeroPath RL is an autonomous drone navigation project using reinforcement learning. The agent is trained to fly from spawn to target in 3D space while avoiding collisions using PPO.
 
 ## Table of Contents
 - [Overview](#overview)
