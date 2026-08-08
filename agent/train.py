@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import time
 from pathlib import Path
 from typing import Optional
@@ -10,19 +9,17 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from stable_baselines3 import PPO, SAC, TD3
+from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import (
     BaseCallback,
     CallbackList,
     CheckpointCallback,
     EvalCallback,
 )
-from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import (
     DummyVecEnv,
     SubprocVecEnv,
-    VecNormalize,
 )
 
 from config.env_config import EnvConfig, ENV_CONFIG
@@ -43,6 +40,10 @@ class DroneTrainingCallback(BaseCallback):
         self._goal_count  = 0
         self._crash_count = 0
         self._ep_count    = 0
+        # Cache the currently-applied curriculum stage so we only push a new
+        # stage to the environment when it actually changes (avoids a per-step
+        # IPC round-trip through the VecEnv bridge on every training step).
+        self._last_curriculum_stage: tuple[float, int] | None = None
 
     def _on_step(self) -> bool:
         infos = self.locals.get("infos", [])
@@ -80,6 +81,14 @@ class DroneTrainingCallback(BaseCallback):
                 break
         else:
             return
+
+        # Only forward the stage to the env when it differs from the last one we
+        # applied. Curriculum thresholds are fixed point-in-time cutovers, so this
+        # is equivalent while removing redundant per-step VecEnv calls.
+        if (target, n_obs) == self._last_curriculum_stage:
+            return
+        self._last_curriculum_stage = (target, n_obs)
+
         env_method = getattr(env, "env_method", None)
         if env_method is None:
             return

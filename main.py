@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import argparse
-import sys
-from pathlib import Path
+from copy import deepcopy
 
 from rich.console import Console
 from rich.panel import Panel
@@ -13,32 +12,43 @@ console = Console()
 
 
 def cmd_train(args: argparse.Namespace):
-    from config.env_config import ENV_CONFIG
-    from config.training_config import TRAIN_CONFIG
+    from config.env_config import EnvConfig, ENV_CONFIG
+    from config.training_config import TrainingConfig, TRAIN_CONFIG
     from agent.train import DroneTrainer
 
-    if args.timesteps:
-        TRAIN_CONFIG.total_timesteps = args.timesteps
-    if args.n_envs:
-        TRAIN_CONFIG.n_envs = args.n_envs
-    if args.difficulty:
-        ENV_CONFIG.difficulty_level = args.difficulty
+    # Use per-invocation copies instead of mutating the module singletons in
+    # place. Mutating ENV_CONFIG/TRAIN_CONFIG leaks between subcommands and
+    # (for n_envs>1) won't propagate to SubprocVecEnv worker processes.
+    env_cfg  = deepcopy(ENV_CONFIG)
+    train_cfg = deepcopy(TRAIN_CONFIG)
 
-    trainer = DroneTrainer(env_cfg=ENV_CONFIG, train_cfg=TRAIN_CONFIG)
+    if args.timesteps:
+        train_cfg.total_timesteps = args.timesteps
+    if args.n_envs:
+        train_cfg.n_envs = args.n_envs
+    if args.difficulty:
+        env_cfg.difficulty_level = args.difficulty
+
+    trainer = DroneTrainer(env_cfg=env_cfg, train_cfg=train_cfg)
     trainer.train(resume_from=args.resume)
 
 
 def cmd_evaluate(args: argparse.Namespace):
     from agent.evaluate import DroneEvaluator
-    from config.env_config import ENV_CONFIG
+    from config.env_config import EnvConfig, ENV_CONFIG
 
+    env_cfg = deepcopy(ENV_CONFIG)
     if args.difficulty:
-        ENV_CONFIG.difficulty_level = args.difficulty
+        env_cfg.difficulty_level = args.difficulty
 
-    evaluator = DroneEvaluator(model_path=args.model, env_cfg=ENV_CONFIG)
+    evaluator = DroneEvaluator(model_path=args.model, env_cfg=env_cfg)
 
     if args.mode == "single":
-        evaluator.evaluate_single(render=args.render, render_2d=args.render2d)
+        evaluator.evaluate_single(
+            render=args.render,
+            render_2d=args.render2d,
+            deterministic=not args.stochastic,
+        )
     else:
         evaluator.evaluate_batch(
             n_episodes=args.n,
@@ -50,12 +60,13 @@ def cmd_evaluate(args: argparse.Namespace):
 
 def cmd_demo(args: argparse.Namespace):
     from agent.evaluate import DroneEvaluator
-    from config.env_config import ENV_CONFIG
+    from config.env_config import EnvConfig, ENV_CONFIG
 
+    env_cfg = deepcopy(ENV_CONFIG)
     if args.difficulty:
-        ENV_CONFIG.difficulty_level = args.difficulty
+        env_cfg.difficulty_level = args.difficulty
 
-    evaluator = DroneEvaluator(model_path=args.model, env_cfg=ENV_CONFIG)
+    evaluator = DroneEvaluator(model_path=args.model, env_cfg=env_cfg)
     console.print(
         Panel(
             "Running live demo episode — watch the console for step output.",
@@ -63,7 +74,7 @@ def cmd_demo(args: argparse.Namespace):
             border_style="yellow",
         )
     )
-    evaluator.evaluate_single(render=True)
+    evaluator.evaluate_single(render=True, deterministic=True)
 
 
 def cmd_info(_args: argparse.Namespace):

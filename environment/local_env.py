@@ -13,8 +13,13 @@ from environment.reward_function import RewardFunction, RewardInfo
 from environment.state_processing import StateProcessor
 
 
-DIFFICULTY_PRESETS: Dict[str, Dict[str, float]] = {
-    "easy": {
+# Drone physical/collision parameters (kept separate from env-config so the
+# simulated "airframe" is tuned once and referenced consistently everywhere).
+DRONE_RADIUS = 0.35
+GROUND_HIT_ALTITUDE = -1.0   # NED: z > this altitude == contacted the ground
+
+
+DIFFICULTY_PRESETS: Dict[str, Dict[str, float]] = {    "easy": {
         "obstacle_density": 0.35,
         "obstacle_radius_min": 0.9,
         "obstacle_radius_max": 1.6,
@@ -108,7 +113,7 @@ class _LocalDroneClient:
         self._pos[2] += vz * dt
 
         # Simple "ground hit" proxy collision.
-        if self._pos[2] > -1.0:
+        if self._pos[2] > GROUND_HIT_ALTITUDE:
             self._collided = True
         return self
 
@@ -427,9 +432,8 @@ class DroneNavigationEnv(gym.Env):
         return best
 
     def _collides_with_obstacle(self, pos: Tuple[float, float, float]) -> bool:
-        drone_radius = 0.35
         for ox, oy, oz, r in self._obstacles:
-            if self._dist(pos, (ox, oy, oz)) <= (r + drone_radius):
+            if self._dist(pos, (ox, oy, oz)) <= (r + DRONE_RADIUS):
                 return True
         return False
 

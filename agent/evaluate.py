@@ -69,7 +69,12 @@ class LiveTrajectory2D:
 
     def close(self):
         plt.ioff()
-        plt.show()
+        # Non-blocking so scripted/demo runs don't hang on the figure window.
+        try:
+            plt.show(block=False)
+            plt.pause(0.05)
+        except Exception:
+            plt.close(self.fig)
 
 
 class EpisodeResult:
@@ -146,13 +151,14 @@ class DroneEvaluator:
         console.print("[green]Model loaded.[/green]")
 
 
-    def evaluate_single(self, render: bool = True, render_2d: bool = False) -> EpisodeResult:
+    def evaluate_single(self, render: bool = True, render_2d: bool = False,
+                        deterministic: bool = True) -> EpisodeResult:
         env = DroneNavigationEnv(cfg=self.env_cfg)
         viewer = LiveTrajectory2D(self.env_cfg) if render_2d else None
         result = _run_episode(
             env,
             self.model,
-            deterministic=True,
+            deterministic=deterministic,
             render=render,
             live_viewer=viewer,
         )

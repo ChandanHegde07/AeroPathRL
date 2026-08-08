@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import List, Optional
 
 
 @dataclass
@@ -13,7 +14,7 @@ class TrainingConfig:
     gamma: float = 0.99
     gae_lambda: float = 0.95
     clip_range: float = 0.2
-    clip_range_vf: float = None
+    clip_range_vf: Optional[float] = None
     ent_coef: float = 0.01
     vf_coef: float = 0.5
     max_grad_norm: float = 0.5
@@ -26,7 +27,7 @@ class TrainingConfig:
     save_freq: int = 50_000
 
     policy_type: str = "MlpPolicy"
-    net_arch: list = field(default_factory=lambda: [256, 256])
+    net_arch: List[int] = field(default_factory=lambda: [256, 256])
     activation_fn: str = "tanh"
 
     n_envs: int = 1
@@ -40,7 +41,7 @@ class TrainingConfig:
     device: str = "auto"
 
     use_curriculum: bool = True
-    curriculum_stages: list = field(default_factory=lambda: [
+    curriculum_stages: List[dict] = field(default_factory=lambda: [
         {"timesteps": 0,        "target_distance": 10.0, "num_obstacles": 2},
         {"timesteps": 200_000,  "target_distance": 20.0, "num_obstacles": 5},
         {"timesteps": 500_000,  "target_distance": 30.0, "num_obstacles": 10},
